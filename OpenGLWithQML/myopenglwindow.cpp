@@ -110,7 +110,7 @@ void MyWindowRenderer::paint()
 //                                                    "    gl_FragColor = vec4(coords.x,.0,.0,1.0);"
 //                                                    "}");
         m_program->addShaderFromSourceFile(QOpenGLShader::Vertex,vtShaderFile);
-        m_program->addShaderFromSourceFile(QOpenGLShader::Vertex,fgShaderFile);
+        m_program->addShaderFromSourceFile(QOpenGLShader::Fragment,fgShaderFile);
 
         m_program->bindAttributeLocation("vertices", 0);
         m_program->link();
