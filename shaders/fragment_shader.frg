@@ -1,5 +1,8 @@
-varying highp vec2 coords;
-//out vec4 FragColor;
+#version 330 core
+//varying highp vec3 coords;
+in vec3 tttColor;
+out vec3 FragColor;
 void main() {
-    gl_FragColor = vec4(coords.x,coords.y,.0,1.0);
+    //FragColor = vec3(1.0f, 0.5f, 0.2f);
+    FragColor = tttColor;
 }

@@ -12,8 +12,7 @@ class MyWindowRenderer:public QObject,protected QOpenGLFunctions
     Q_OBJECT
 public:
     MyWindowRenderer():m_program(0){
-//         fgShaderFile = "G:\\OpenGLWithQML\\OpenGLWithQML\\shaders\\fragment_shader.frg";
-//         vtShaderFile = "G:\\OpenGLWithQML\\OpenGLWithQML\\shaders\\vertex_shader.vtx";
+
         fgShaderFile = ":/shaders/fragment_shader.frg";
         vtShaderFile = ":/shaders/vertex_shader.vtx";
 
@@ -24,8 +23,8 @@ public:
     void setWindow(QQuickWindow *window){m_window = window;}
 
 
-        QString fgShaderFile;
-        QString vtShaderFile;
+    QString fgShaderFile;
+    QString vtShaderFile;
 
 
 public slots:

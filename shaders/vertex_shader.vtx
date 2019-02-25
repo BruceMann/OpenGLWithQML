@@ -1,6 +1,11 @@
-attribute highp vec4 vertices;
-varying highp vec2 coords;
+#version 330 core
+layout (location = 0) in vec3 vertices;
+layout (location = 1) in vec3 color;
+//attribute highp vec3 vertices;
+//varying highp vec2 coords;
+out vec3 tttColor;
 void main() {
-    gl_Position = vertices;
-    coords = vertices.xy;
+    gl_Position = vec4(vertices.x,vertices.y,vertices.z,1.0);
+    //coords = vertices.xy;
+    tttColor = color;
 }

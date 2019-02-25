@@ -34,3 +34,6 @@ HEADERS += \
     myopenglwindow.h
 
 DISTFILES +=
+
+
+LIBS += -lopengl32
