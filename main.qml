@@ -5,8 +5,8 @@ import OpenGLWithQML 1.0
 
 Window {
     visible: true
-    width: 640
-    height: 480
+    width: 300
+    height: 300
     title: qsTr("Hello World")
 
     MyOpenGLWindow{
