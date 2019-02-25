@@ -17,7 +17,8 @@ SOURCES += \
     myopenglwindow.cpp
 
 RESOURCES += qml.qrc \
-    src.qrc
+    src.qrc \
+    image.qrc
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH =
@@ -31,7 +32,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
-    myopenglwindow.h
+    myopenglwindow.h \
+    vertexdata.h
 
 DISTFILES +=
 

@@ -7,6 +7,11 @@
 #include <QFile>
 
 #include <QDebug>
+#include <QImage>
+
+#include "vertexdata.h"
+
+
 
 MyOpenglWindow::MyOpenglWindow()
     :m_renderer(nullptr)
@@ -48,6 +53,8 @@ void MyOpenglWindow::readShaderFile( QString vxShaderFile,  QString fgShaderFile
     //return true;
 }
 
+
+
 void MyOpenglWindow::sync()
 {
     qDebug()<<"void MyOpenglWindow::sync()";
@@ -84,41 +91,33 @@ MyWindowRenderer::~MyWindowRenderer()
     delete m_program;
 }
 
-//    float values[] = {
-//        -0.5f, -0.5f, 0.0f, // Left
-//          0.5f, -0.5f, 0.0f, // Right
-//          0.0f,  0.5f, 0.0f  // Top
-//    };
+void MyWindowRenderer::genTexture()
+{
 
 
-//    GLfloat vertices[] = {
-//         0.5f,  0.5f, 0.0f,  // Top Right
-//         0.5f, -0.5f, 0.0f,  // Bottom Right
-//        -0.5f, -0.5f, 0.0f,  // Bottom Left
-//        -0.5f,  0.5f, 0.0f   // Top Left
-//    };
-//    GLuint indices[] = {  // Note that we start from 0!
-//        0, 1, 3,  // First Triangle
-//        1, 2, 3   // Second Triangle
-//    };
+    glGenTextures(1,&texture);
+    glBindTexture(GL_TEXTURE_2D,texture);
+    // Set the texture wrapping parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);	// Set texture wrapping to GL_REPEAT (usually basic wrapping method)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+    // Set texture filtering parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-//    GLfloat vertices[] = {
-//        // First triangle
-//        -0.9f, -0.5f, 0.0f,  // Left
-//        -0.0f, -0.5f, 0.0f,  // Right
-//        -0.45f, 0.5f, 0.0f,  // Top
-//        // Second triangle
-//         0.0f, -0.5f, 0.0f,  // Left
-//         0.9f, -0.5f, 0.0f,  // Right
-//         0.45f, 0.5f, 0.0f   // Top
-//    };
+    QImage tex_image(QString(":/image/wall.jpg"));
 
-GLfloat vertices[] = {
-    // Positions         // Colors
-     0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  // Bottom Right
-    -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  // Bottom Left
-     0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f   // Top
-};
+    int width,height;
+    imageBits =  tex_image.bits();
+    width = tex_image.width();
+    height = tex_image.height();
+
+    qDebug()<<width<<height<<imageBits;
+
+    glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,width,height,0,GL_RGB,GL_UNSIGNED_BYTE,imageBits);
+//    glGenerateMiamap(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture when done, so we won't accidentily mess up our texture.
+
+}
 
 void MyWindowRenderer::paint()
 {
@@ -140,17 +139,22 @@ void MyWindowRenderer::paint()
     m_program->enableAttributeArray(0);
 
 
-//    GLuint EBO;
-//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-//     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    GLuint EBO;
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
     GLuint VBO;
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    m_program->setAttributeBuffer(0,GL_FLOAT,(0 * sizeof(GLfloat)),3,24);
+
+    m_program->setAttributeBuffer(0,GL_FLOAT,(0 * sizeof(GLfloat)),3,8*sizeof(GLfloat));
     m_program->enableAttributeArray(0);
-    m_program->setAttributeBuffer(1,GL_FLOAT,(3 * sizeof(GLfloat)),3,24);
+    m_program->setAttributeBuffer(1,GL_FLOAT,(3 * sizeof(GLfloat)),3,8*sizeof(GLfloat));
     m_program->enableAttributeArray(1);
+    m_program->setAttributeBuffer(2,GL_FLOAT,(6 * sizeof(GLfloat)),2,8*sizeof(GLfloat));
+    m_program->enableAttributeArray(2);
+
+    genTexture();
 
 //    m_program->setAttributeArray(0, GL_FLOAT,vertices,3,24);
 
@@ -191,8 +195,9 @@ void MyWindowRenderer::paint()
 //    glEnable(GL_BLEND);
 //    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-//    glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
+    glBindTexture(GL_TEXTURE_2D,texture);
+//    glDrawArrays(GL_LINE, 0, 4);
+    glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
 
 //    m_program->disableAttributeArray(0);
 //    m_program->disableAttributeArray(1);

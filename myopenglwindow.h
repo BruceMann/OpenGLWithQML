@@ -22,6 +22,9 @@ public:
     void setViewportSize(const QSize &size){m_viewportSize = size;}
     void setWindow(QQuickWindow *window){m_window = window;}
 
+    void genTexture();
+    GLuint texture;
+    uchar* imageBits;
 
     QString fgShaderFile;
     QString vtShaderFile;
@@ -46,6 +49,10 @@ public:
     MyOpenglWindow();
 
     void readShaderFile(QString vxShaderFile, QString fgShaderFile);
+
+
+
+
 
 public slots:
     void sync();
