@@ -3,6 +3,7 @@
 #include <QtQuick/qquickwindow.h>
 #include <QtGui/QOpenGLContext>
 #include <QOpenGLExtraFunctions>
+#include <QOpenGLFunctions_3_0>
 
 #include <QFile>
 
@@ -94,17 +95,17 @@ MyWindowRenderer::~MyWindowRenderer()
 void MyWindowRenderer::genTexture()
 {
 
-
     glGenTextures(1,&texture);
     glBindTexture(GL_TEXTURE_2D,texture);
     // Set the texture wrapping parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);	// Set texture wrapping to GL_REPEAT (usually basic wrapping method)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// Set texture wrapping to GL_REPEAT (usually basic wrapping method)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     // Set texture filtering parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     QImage tex_image(QString(":/image/wall.jpg"));
+    tex_image = tex_image.convertToFormat(QImage::Format_RGB888);
 
     int width,height;
     imageBits =  tex_image.bits();
@@ -136,16 +137,15 @@ void MyWindowRenderer::paint()
 
     m_program->bind();
 
-    m_program->enableAttributeArray(0);
+    GLuint VBO, EBO;
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
 
-
-    GLuint EBO;
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-    GLuint VBO;
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     m_program->setAttributeBuffer(0,GL_FLOAT,(0 * sizeof(GLfloat)),3,8*sizeof(GLfloat));
     m_program->enableAttributeArray(0);
@@ -166,7 +166,7 @@ void MyWindowRenderer::paint()
 
 //     GLuint VBO, VAO;
 
-////     glGenVertexArrays(1, &VAO);
+//     glGenVertexArrays(1, &VAO);
 //       glGenBuffers(1, &VBO);
 //       // Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
 ////       glBindVertexArray(VAO);
@@ -199,8 +199,9 @@ void MyWindowRenderer::paint()
 //    glDrawArrays(GL_LINE, 0, 4);
     glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
 
-//    m_program->disableAttributeArray(0);
-//    m_program->disableAttributeArray(1);
+    m_program->disableAttributeArray(0);
+    m_program->disableAttributeArray(1);
+    m_program->disableAttributeArray(2);
 
     m_program->release();
 
