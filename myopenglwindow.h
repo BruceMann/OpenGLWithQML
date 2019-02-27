@@ -22,8 +22,9 @@ public:
     void setViewportSize(const QSize &size){m_viewportSize = size;}
     void setWindow(QQuickWindow *window){m_window = window;}
 
-    void genTexture();
+    void genTexture(GLuint &texture, const QString &imageFile);
     GLuint texture;
+    GLuint texture_mix;
     uchar* imageBits;
 
     QString fgShaderFile;

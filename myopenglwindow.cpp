@@ -3,6 +3,7 @@
 #include <QtQuick/qquickwindow.h>
 #include <QtGui/QOpenGLContext>
 #include <QOpenGLExtraFunctions>
+#include <QOpenGLShaderProgram>
 #include <QOpenGLFunctions_3_0>
 
 #include <QFile>
@@ -46,12 +47,6 @@ void MyOpenglWindow::readShaderFile( QString vxShaderFile,  QString fgShaderFile
             qDebug()<<"vxShaderFile open failed !!!";
     }else
         qDebug()<<"vxShaderFile is not existed !!!";
-
-
-//    m_renderer->m_vt_shader_file = vxShaderFile;
-//    m_renderer->m_fg_shader_file = fgShaderFile;
-
-    //return true;
 }
 
 
@@ -92,7 +87,7 @@ MyWindowRenderer::~MyWindowRenderer()
     delete m_program;
 }
 
-void MyWindowRenderer::genTexture()
+void MyWindowRenderer::genTexture(GLuint& texture,const QString& imageFile)
 {
 
     glGenTextures(1,&texture);
@@ -104,7 +99,7 @@ void MyWindowRenderer::genTexture()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    QImage tex_image(QString(":/image/wall.jpg"));
+    QImage tex_image(imageFile);
     tex_image = tex_image.convertToFormat(QImage::Format_RGB888);
 
     int width,height;
@@ -129,9 +124,6 @@ void MyWindowRenderer::paint()
         m_program = new QOpenGLShaderProgram();
         m_program->addShaderFromSourceFile(QOpenGLShader::Vertex,vtShaderFile);
         m_program->addShaderFromSourceFile(QOpenGLShader::Fragment,fgShaderFile);
-
-//        m_program->bindAttributeLocation("vertices", 0);
-//        m_program->bindAttributeLocation("color",1);
         m_program->link();
     }
 
@@ -154,49 +146,27 @@ void MyWindowRenderer::paint()
     m_program->setAttributeBuffer(2,GL_FLOAT,(6 * sizeof(GLfloat)),2,8*sizeof(GLfloat));
     m_program->enableAttributeArray(2);
 
-    genTexture();
-
-//    m_program->setAttributeArray(0, GL_FLOAT,vertices,3,24);
-
-//    m_program->enableAttributeArray(0);
-//    m_program->setAttributeArray(1, GL_FLOAT,vertices,3,24);
-
-//    m_program->enableAttributeArray(1);
-    //m_program->setUniformValue("ourColor",0.0,1.0,0.0,1.0);
-
-//     GLuint VBO, VAO;
-
-//     glGenVertexArrays(1, &VAO);
-//       glGenBuffers(1, &VBO);
-//       // Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
-////       glBindVertexArray(VAO);
-
-//    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-//    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-//    // Position attribute
-//    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)0);
-//    glEnableVertexAttribArray(0);
-//    // Color attribute
-//    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (GLvoid*)(3 * sizeof(GLfloat)));
-//    glEnableVertexAttribArray(1);
-
-////    glBindVertexArray(0);
+    genTexture(texture_mix,":/image/awesomeface.png");
+    genTexture(texture,":/image/wall.jpg");
 
     glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
 
-//    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_DEPTH_TEST);
 
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
 
-//    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-//    glEnable(GL_BLEND);
-//    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D,texture);
-//    glDrawArrays(GL_LINE, 0, 4);
+    m_program->setUniformValue("ourTexture1",0);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D,texture_mix);
+    m_program->setUniformValue("ourTexture2",1);
+
     glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
 
     m_program->disableAttributeArray(0);
