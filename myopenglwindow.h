@@ -12,7 +12,7 @@ class MyWindowRenderer:public QObject,protected QOpenGLFunctions
     Q_OBJECT
 public:
     MyWindowRenderer():m_program(0){
-
+        // test password change  2019/2/27
         fgShaderFile = ":/shaders/fragment_shader.frg";
         vtShaderFile = ":/shaders/vertex_shader.vtx";
 
