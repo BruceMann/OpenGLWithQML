@@ -2,12 +2,15 @@
 #define MYOPENGLWINDOW_H
 
 #include <QObject>
+#include <QQuickWindow>
 #include <QtQuick/QQuickItem>
 #include <QtGui/QOpenGLShaderProgram>
 #include <QtGui/QOpenGLFunctions>
+#include <QOpenGLExtraFunctions>
+
 
 //! [1]
-class MyWindowRenderer:public QObject,protected QOpenGLFunctions
+class MyWindowRenderer:public QObject,protected QOpenGLExtraFunctions
 {
     Q_OBJECT
 public:
@@ -16,8 +19,11 @@ public:
         fgShaderFile = ":/shaders/fragment_shader.frg";
         vtShaderFile = ":/shaders/vertex_shader.vtx";
 
+        renderInit();
     }
     ~MyWindowRenderer();
+
+    void renderInit();
 
     void setViewportSize(const QSize &size){m_viewportSize = size;}
     void setWindow(QQuickWindow *window){m_window = window;}
@@ -30,6 +36,9 @@ public:
     QString fgShaderFile;
     QString vtShaderFile;
 
+    qreal mixValue;
+
+        GLuint VAO, VBO, EBO;
 
 public slots:
     void paint();
@@ -46,13 +55,24 @@ private:
 class MyOpenglWindow:public QQuickItem
 {
     Q_OBJECT
+
+    Q_PROPERTY(qreal mixValue READ mixValue WRITE setmixValue NOTIFY mixValueChanged)
+
 public:
     MyOpenglWindow();
 
     void readShaderFile(QString vxShaderFile, QString fgShaderFile);
 
+    qreal mixValue(){return m_mixValue;}
+    void setmixValue(qreal value){
+        m_mixValue = value;
+        emit mixValueChanged(m_mixValue);
+        if (window())
+            window()->update();
+    }
 
-
+signals:
+    void mixValueChanged(qreal mixValue);
 
 
 public slots:
@@ -64,6 +84,7 @@ private slots:
     void handleWindowChanged(QQuickWindow *win);
 
 private:
+    qreal m_mixValue;
     MyWindowRenderer* m_renderer;
 
 

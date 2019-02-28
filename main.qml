@@ -11,7 +11,17 @@ Window {
 
     MyOpenGLWindow{
         anchors.fill: parent
-
+        focus: true
+        Keys.onPressed: {
+            if (event.key === Qt.Key_Up){
+                console.log("Qt.Key_Up")
+                mixValue+=0.1
+            }
+            if (event.key === Qt.Key_Down){
+                console.log("Qt.Key_Down")
+                mixValue-=0.1
+            }
+        }
 //        Rectangle{
 //            anchors.centerIn: parent
 //            width: 10

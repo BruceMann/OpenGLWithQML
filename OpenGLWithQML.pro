@@ -6,8 +6,9 @@ CONFIG += c++11
 # depend on your compiler). Please consult the documentation of the
 # deprecated API in order to know how to port your code away from it.
 DEFINES += QT_DEPRECATED_WARNINGS
-
 ECLASS_PATH_DIR = $$dirname(PWD)
+
+INCLUDEPATH += $$PWD/include/
 
 DESTDIR = $$ECLASS_PATH_DIR/OpenGLWithQML/dst
 

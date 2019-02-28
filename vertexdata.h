@@ -45,6 +45,15 @@ GLfloat vertices[] = {
     -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // 左上
 };
 
+//// Set up vertex data (and buffer(s)) and attribute pointers
+//GLfloat vertices[] = {
+//    // Positions          // Colors           // Texture Coords  (Note that we changed them to 'zoom in' on our texture image)
+//     0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   0.55f, 0.55f,  // Top Right
+//     0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   0.55f, 0.45f, // Bottom Right
+//    -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.45f, 0.45f, // Bottom Left
+//    -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.45f, 0.55f  // Top Left
+//};
+
 GLuint indices[] = {  // Note that we start from 0!
     0, 1, 3, // First Triangle
     1, 2, 3  // Second Triangle
