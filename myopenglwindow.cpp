@@ -22,21 +22,25 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+// Camera
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+//bool m_keys[1024] = {false};   //记录按键 实现组合按键
+QMap<int,bool> m_keys;
 
 MyOpenglWindow::MyOpenglWindow()
     :m_renderer(nullptr)
 {
+    setFocus(true);
     m_mixValue = 0.5;
+
     connect(this,&QQuickItem::windowChanged,this,&MyOpenglWindow::handleWindowChanged);
 
     updateTimer = new QTimer(this);
-    updateTimer->setInterval(10);
+    updateTimer->setInterval(1000/60);
 
     connect(updateTimer,&QTimer::timeout,[=](){
-        updateCount++;
-        if(updateCount>720){
-            updateCount=0;
-        }
         if(window()){
             window()->update();
         }
@@ -71,7 +75,21 @@ void MyOpenglWindow::readShaderFile( QString vxShaderFile,  QString fgShaderFile
         qDebug()<<"vxShaderFile is not existed !!!";
 }
 
+void MyOpenglWindow::keyPressEvent(QKeyEvent *event)
+{
+    qDebug() << "KeyPressed:: "<<event->key();
+    m_keys[event->key()] = true;
+}
 
+void MyOpenglWindow::keyReleaseEvent(QKeyEvent *event)
+{
+    if(event->isAutoRepeat() ) {
+        event->ignore();
+    } else {
+        qDebug() << "keyReleaseEvent:: "<<event->key() ;
+        m_keys[event->key()] = false;
+    }
+}
 
 void MyOpenglWindow::sync()
 {
@@ -150,7 +168,6 @@ void MyWindowRenderer::renderInit()
 
     genTexture(texture_mix,":/image/awesomeface.png");
 //    genTexture(texture,":/image/wall.jpg");
-
     genTexture(texture,":/image/woodBox.jpg");
 
 }
@@ -180,11 +197,24 @@ void MyWindowRenderer::genTexture(GLuint& texture,const QString& imageFile)
     glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,width,height,0,GL_RGB,GL_UNSIGNED_BYTE,imageBits);
     glGenerateMipmap(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture when done, so we won't accidentily mess up our texture.
+}
 
+void MyWindowRenderer::doMovement()
+{
+    //camera controll
+    GLfloat cameraSpeed = 0.11f;
+    if(m_keys[Qt::Key_W])
+        cameraPos+=cameraSpeed*cameraFront;
+    if(m_keys[Qt::Key_S])
+        cameraPos-=cameraSpeed*cameraFront;
+    if(m_keys[Qt::Key_A])
+        cameraPos -=glm::normalize(glm::cross(cameraFront,cameraUp))*cameraSpeed;
+    if(m_keys[Qt::Key_D])
+        cameraPos +=glm::normalize(glm::cross(cameraFront,cameraUp))*cameraSpeed;
 }
 
 glm::vec3 cubePositions[] = {
-  glm::vec3(-13.8f, -12.0f, -2.3f),
+  glm::vec3(-8.8f, -2.0f, -2.3f),
   glm::vec3( 2.0f,  5.0f, -15.0f),
   glm::vec3(-1.5f, -2.2f, -2.5f),
   glm::vec3(-3.8f, -2.0f, -12.3f),
@@ -198,13 +228,10 @@ glm::vec3 cubePositions[] = {
 
 void MyWindowRenderer::paint()
 {
-    counter+=0.5f;
-    if(counter>7200){
-        counter=0.0f;
-    }
-    qDebug()<<counter;
+    double tmp_counter = (double)timeClock.elapsed()*0.001;   //millisecond --> seconds
 
-//    qDebug()<<"void MyWindowRenderer::paint()";
+    doMovement();
+
     m_program->bind();
 
     glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
@@ -227,35 +254,27 @@ void MyWindowRenderer::paint()
 
     m_program->setUniformValue("mixValue",float(mixValue));
 
-    glm::mat4 model;
+    //Camera/View transformation
     glm::mat4 view;
+//    GLfloat radius =13.0f;
+//    GLfloat camX = sin(tmp_counter)*radius;
+//    GLfloat camZ = cos(tmp_counter)*radius;
+//    view = glm::lookAt(glm::vec3(camX,0.0f,camZ),glm::vec3(0.0f,0.0f,0.0f),glm::vec3(0.0f,1.0f,0.0f));
+    view = glm::lookAt(cameraPos,cameraPos+cameraFront,cameraUp);
+
+    //Projection
     glm::mat4 projection;
-
-
-
-//    model = glm::rotate(model, (GLfloat)counter*0.01f, glm::vec3(0.5f, 1.0f, 0.0f));
-//    model = glm::scale(model,glm::vec3(2.0f,2.0f,1.0f));
-//    model =glm::translate(model,glm::vec3(0.3f,0.0f,0.0f));
-    view = glm::translate(view,glm::vec3(0.0f,0.0f,-3.0f));
     projection = glm::perspective(45.0f,(GLfloat)m_viewportSize.width()/(GLfloat)m_viewportSize.height(),0.1f,100.0f);
 
-//    QMatrix4x4 m1 = QMatrix4x4(glm::value_ptr(model));
-//    qDebug()<<m1;
-//    qDebug()<<m1.transposed();
-
-
-//    m_program->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
     m_program->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
     m_program->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
 
     glBindVertexArray(VAO);
-//    glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,0);
-//    glDrawArrays(GL_TRIANGLES, 0, 36);
     for(GLuint i = 0; i < 10; i++)
     {
       glm::mat4 model;
       model = glm::translate(model, cubePositions[i]);
-      GLfloat angle = 0.003f * i * counter;
+      GLfloat angle = 36.0f * i;
       model = glm::rotate(model, angle, glm::vec3(1.0f, 0.3f, 0.5f));
       m_program->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
 
@@ -263,14 +282,12 @@ void MyWindowRenderer::paint()
     }
     glBindVertexArray(0);
 
-    m_program->disableAttributeArray(0);
-    m_program->disableAttributeArray(1);
-//    m_program->disableAttributeArray(2);
+//    m_program->disableAttributeArray(0);
+//    m_program->disableAttributeArray(1);
 
-    m_program->release();
+//    m_program->release();
 
     // Not strictly needed for this example, but generally useful for when
     // mixing with raw OpenGL.
-    m_window->resetOpenGLState();
-
+//    m_window->resetOpenGLState();
 }

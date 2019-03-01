@@ -22,6 +22,8 @@ Window {
                 mixValue-=0.1
             }
         }
+
+
 //        Rectangle{
 //            anchors.centerIn: parent
 //            width: 10

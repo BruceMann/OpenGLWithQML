@@ -9,6 +9,7 @@
 #include <QOpenGLExtraFunctions>
 
 #include <QTimer>
+#include <QTime>
 
 //! [1]
 class MyWindowRenderer:public QObject,protected QOpenGLExtraFunctions
@@ -16,7 +17,8 @@ class MyWindowRenderer:public QObject,protected QOpenGLExtraFunctions
     Q_OBJECT
 public:
     MyWindowRenderer():m_program(0),counter(0){
-        // test password change  2019/2/27
+        timeClock.start();
+
         fgShaderFile = ":/shaders/fragment_shader.frg";
         vtShaderFile = ":/shaders/vertex_shader.vtx";
 
@@ -43,6 +45,9 @@ public:
 
     GLfloat counter;
 
+    QTime timeClock;
+
+    void doMovement();   //camera control
 
 public slots:
     void paint();
@@ -59,10 +64,7 @@ private:
 class MyOpenglWindow:public QQuickItem
 {
     Q_OBJECT
-
     Q_PROPERTY(qreal mixValue READ mixValue WRITE setmixValue NOTIFY mixValueChanged)
-    //Q_PROPERTY(qreal updateTimer READ updateTimer WRITE setUpdateTimer NOTIFY updateTimerChanged)
-
 
 public:
     MyOpenglWindow();
@@ -78,9 +80,10 @@ public:
     }
 
     QTimer* updateTimer;
-
     int updateCount;
 
+    void keyPressEvent(QKeyEvent *event);
+    void keyReleaseEvent(QKeyEvent *event);
 
 signals:
     void mixValueChanged(qreal mixValue);
