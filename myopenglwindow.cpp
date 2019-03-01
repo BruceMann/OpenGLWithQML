@@ -22,10 +22,34 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+
+glm::vec3 cubePositions[] = {
+  glm::vec3(-8.8f, -2.0f, -2.3f),
+  glm::vec3( 2.0f,  5.0f, -15.0f),
+  glm::vec3(-1.5f, -2.2f, -2.5f),
+  glm::vec3(-3.8f, -2.0f, -12.3f),
+  glm::vec3( 2.4f, -0.4f, -3.5f),
+  glm::vec3(-1.7f,  3.0f, -7.5f),
+  glm::vec3( 1.3f, -2.0f, -2.5f),
+  glm::vec3( 1.5f,  2.0f, -2.5f),
+  glm::vec3( 1.5f,  0.2f, -1.5f),
+  glm::vec3(-1.3f,  1.0f, -1.5f)
+};
+
 // Camera
 glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
+GLfloat yaw = -90.0f;
+GLfloat pitch = 0.0f;
+GLfloat lastX = 300.0f;
+GLfloat lastY = 300.0f;
+GLfloat fov = 45.0f;
+
+//Deltatime
+GLfloat deltaTime = 0.0f;   //Time between current frame and last frame
+GLfloat lastFrame = 0.0f;   //Time of last frame
+
 //bool m_keys[1024] = {false};   //记录按键 实现组合按键
 QMap<int,bool> m_keys;
 
@@ -33,6 +57,7 @@ MyOpenglWindow::MyOpenglWindow()
     :m_renderer(nullptr)
 {
     setFocus(true);
+    setAcceptHoverEvents(true);
     m_mixValue = 0.5;
 
     connect(this,&QQuickItem::windowChanged,this,&MyOpenglWindow::handleWindowChanged);
@@ -89,6 +114,69 @@ void MyOpenglWindow::keyReleaseEvent(QKeyEvent *event)
         qDebug() << "keyReleaseEvent:: "<<event->key() ;
         m_keys[event->key()] = false;
     }
+}
+
+void MyOpenglWindow::hoverEnterEvent(QHoverEvent *event)
+{
+    lastX = (GLfloat)event->posF().x();
+    lastY = (GLfloat)event->posF().y();
+
+    qDebug()<<"hoverEnter event:: "<<lastX<<" "<<lastY;
+}
+
+void MyOpenglWindow::hoverMoveEvent(QHoverEvent *event)
+{
+    GLfloat curPosX = (GLfloat)event->posF().x();
+    GLfloat curPosY = (GLfloat)event->posF().y();
+    qDebug()<<"hoverMoveEvent event:: "<<curPosX<<" "<<curPosY;
+
+    GLfloat xoffset = curPosX - lastX;
+    GLfloat yoffset = lastY - curPosY;
+    lastX = curPosX;
+    lastY = curPosY;
+    qDebug()<<"xoffset::  "<<xoffset<<"yoffset:: "<<yoffset;
+
+    GLfloat sensitivity = 0.1f;
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    yaw += xoffset;
+    pitch += yoffset;
+
+    if(pitch>89.0f)
+        pitch = 89.0f;
+    if(pitch<-89.0f)
+        pitch = -89.0f;
+
+    glm::vec3 front;
+    front.x = cos(glm::radians(yaw))*cos(glm::radians(pitch));
+    front.y = sin(glm::radians(pitch));
+    front.z = sin(glm::radians(yaw))*cos(glm::radians(pitch));
+    cameraFront = glm::normalize(front);
+}
+
+void MyOpenglWindow::hoverLeaveEvent(QHoverEvent *event)
+{
+    Q_UNUSED(event)
+
+}
+
+void MyOpenglWindow::wheelEvent(QWheelEvent *event)
+{
+    qDebug()<<"wheelEvent ::  "<<event->angleDelta().x()<<" "<<event->angleDelta().y();
+    QPoint numSteps = event->angleDelta()/120;
+    qDebug()<<"wheelEvent ::  "<<numSteps.x()<<" "<<numSteps.y();
+    double yoffset = numSteps.y();
+
+    if(fov>=1.0f && fov <=45.0f)
+        fov -= yoffset*0.1;
+    if (fov <= 1.0f)
+        fov = 1.0f;
+    if (fov >= 45.0f)
+        fov = 45.0f;
+
+    qDebug()<<"FOV"<<fov;
+
 }
 
 void MyOpenglWindow::sync()
@@ -174,7 +262,6 @@ void MyWindowRenderer::renderInit()
 
 void MyWindowRenderer::genTexture(GLuint& texture,const QString& imageFile)
 {
-
     glGenTextures(1,&texture);
     glBindTexture(GL_TEXTURE_2D,texture);
     // Set the texture wrapping parameters
@@ -212,19 +299,6 @@ void MyWindowRenderer::doMovement()
     if(m_keys[Qt::Key_D])
         cameraPos +=glm::normalize(glm::cross(cameraFront,cameraUp))*cameraSpeed;
 }
-
-glm::vec3 cubePositions[] = {
-  glm::vec3(-8.8f, -2.0f, -2.3f),
-  glm::vec3( 2.0f,  5.0f, -15.0f),
-  glm::vec3(-1.5f, -2.2f, -2.5f),
-  glm::vec3(-3.8f, -2.0f, -12.3f),
-  glm::vec3( 2.4f, -0.4f, -3.5f),
-  glm::vec3(-1.7f,  3.0f, -7.5f),
-  glm::vec3( 1.3f, -2.0f, -2.5f),
-  glm::vec3( 1.5f,  2.0f, -2.5f),
-  glm::vec3( 1.5f,  0.2f, -1.5f),
-  glm::vec3(-1.3f,  1.0f, -1.5f)
-};
 
 void MyWindowRenderer::paint()
 {
@@ -264,7 +338,7 @@ void MyWindowRenderer::paint()
 
     //Projection
     glm::mat4 projection;
-    projection = glm::perspective(45.0f,(GLfloat)m_viewportSize.width()/(GLfloat)m_viewportSize.height(),0.1f,100.0f);
+    projection = glm::perspective(fov,(GLfloat)m_viewportSize.width()/(GLfloat)m_viewportSize.height(),0.1f,100.0f);
 
     m_program->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
     m_program->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
@@ -274,7 +348,7 @@ void MyWindowRenderer::paint()
     {
       glm::mat4 model;
       model = glm::translate(model, cubePositions[i]);
-      GLfloat angle = 36.0f * i;
+      GLfloat angle = 0.2f * i * tmp_counter;
       model = glm::rotate(model, angle, glm::vec3(1.0f, 0.3f, 0.5f));
       m_program->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
 

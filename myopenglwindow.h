@@ -82,8 +82,14 @@ public:
     QTimer* updateTimer;
     int updateCount;
 
-    void keyPressEvent(QKeyEvent *event);
-    void keyReleaseEvent(QKeyEvent *event);
+    void keyPressEvent(QKeyEvent *event) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
+
+    void hoverEnterEvent(QHoverEvent* event) override;
+    void hoverMoveEvent(QHoverEvent* event) override;
+    void hoverLeaveEvent(QHoverEvent* event) override;
+
+    void wheelEvent(QWheelEvent *event) override;
 
 signals:
     void mixValueChanged(qreal mixValue);
