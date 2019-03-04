@@ -32,6 +32,7 @@ public:
     void setWindow(QQuickWindow *window){m_window = window;}
 
     void genTexture(GLuint &texture, const QString &imageFile);
+
     GLuint texture;
     GLuint texture_mix;
     uchar* imageBits;
@@ -40,11 +41,8 @@ public:
     QString vtShaderFile;
 
     qreal mixValue;
-
     GLuint VAO, VBO, EBO;
-
     GLfloat counter;
-
     QTime timeClock;
 
     void doMovement();   //camera control
@@ -55,8 +53,8 @@ public slots:
 private:
     QSize m_viewportSize;
     QOpenGLShaderProgram *m_program;
+    QOpenGLShaderProgram *Light_ShaderProgram;
     QQuickWindow *m_window;
-
 };
 //! [1]
 

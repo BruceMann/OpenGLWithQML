@@ -230,9 +230,7 @@ void MyWindowRenderer::renderInit()
         m_program->addShaderFromSourceFile(QOpenGLShader::Fragment,fgShaderFile);
         m_program->link();
     }
-
     m_program->bind();
-
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
 //    glGenBuffers(1, &EBO);
@@ -257,6 +255,16 @@ void MyWindowRenderer::renderInit()
     genTexture(texture_mix,":/image/awesomeface.png");
 //    genTexture(texture,":/image/wall.jpg");
     genTexture(texture,":/image/woodBox.jpg");
+
+
+//    if(!Light_ShaderProgram){
+//        initializeOpenGLFunctions();
+//        Light_ShaderProgram = new QOpenGLShaderProgram();
+//        Light_ShaderProgram->addShaderFromSourceFile(QOpenGLShader::Vertex,":/shaders/color_light.vtx");
+//        Light_ShaderProgram->addShaderFromSourceFile(QOpenGLShader::Fragment,":/shaders/color_light.frg");
+//        Light_ShaderProgram->link();
+//    }
+
 
 }
 
@@ -313,7 +321,7 @@ void MyWindowRenderer::paint()
 //    glDisable(GL_DEPTH_TEST);
     glEnable(GL_DEPTH_TEST);
 
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
 //    glEnable(GL_BLEND);
@@ -327,6 +335,10 @@ void MyWindowRenderer::paint()
     m_program->setUniformValue("ourTexture2",1);
 
     m_program->setUniformValue("mixValue",float(mixValue));
+
+
+    m_program->setUniformValue("objectColor",1.0f,0.5f,0.31f);
+    m_program->setUniformValue("lightColor",1.0f,1.0f,1.0f);
 
     //Camera/View transformation
     glm::mat4 view;
@@ -348,7 +360,7 @@ void MyWindowRenderer::paint()
     {
       glm::mat4 model;
       model = glm::translate(model, cubePositions[i]);
-      GLfloat angle = 0.2f * i * tmp_counter;
+      GLfloat angle = 0.2f * i ;
       model = glm::rotate(model, angle, glm::vec3(1.0f, 0.3f, 0.5f));
       m_program->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
 

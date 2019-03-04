@@ -23,6 +23,10 @@ Window {
             }
         }
 
+        Component.onCompleted: {
+            console.log("MyOpenGLWindow Completed!  ")
+        }
+
 
 //        Rectangle{
 //            anchors.centerIn: parent
