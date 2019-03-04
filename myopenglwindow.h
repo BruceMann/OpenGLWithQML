@@ -38,10 +38,11 @@ public:
 
     qreal mixValue;
     GLuint VAO, VBO, EBO;
+
     GLfloat counter;
     QTime timeClock;
 
-    void doMovement();   //camera control
+//    void doMovement();   //camera control
 
 public slots:
     void paint();

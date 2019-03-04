@@ -26,6 +26,8 @@
 
 extern MyCamera global_camera(glm::vec3(1.0f, 2.0f,  5.0f));
 
+glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+
 glm::vec3 cubePositions[] = {
   glm::vec3(-8.8f, -2.0f, -2.3f),
   glm::vec3( 2.0f,  5.0f, -15.0f),
@@ -76,6 +78,8 @@ MyOpenglWindow::MyOpenglWindow()
     updateTimer->start();
 
     global_camera.MovementSpeed=0.08f;
+    global_camera.Pitch = -10.0f;
+//    global_camera.Yaw = 10.0f;
 
     this->installEventFilter(&global_camera);
 
@@ -255,9 +259,9 @@ void MyWindowRenderer::renderInit()
 //    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 //    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    m_program->setAttributeBuffer(0,GL_FLOAT,(0 * sizeof(GLfloat)),3,5*sizeof(GLfloat));
+    m_program->setAttributeBuffer(0,GL_FLOAT,(0 * sizeof(GLfloat)),3,6*sizeof(GLfloat));
     m_program->enableAttributeArray(0);
-    m_program->setAttributeBuffer(1,GL_FLOAT,(3 * sizeof(GLfloat)),2,5*sizeof(GLfloat));
+    m_program->setAttributeBuffer(1,GL_FLOAT,(3 * sizeof(GLfloat)),3,6*sizeof(GLfloat));
     m_program->enableAttributeArray(1);
 //    m_program->setAttributeBuffer(2,GL_FLOAT,(6 * sizeof(GLfloat)),2,8*sizeof(GLfloat));
 //    m_program->enableAttributeArray(2);
@@ -306,19 +310,19 @@ void MyWindowRenderer::genTexture(GLuint& texture,const QString& imageFile)
     glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture when done, so we won't accidentily mess up our texture.
 }
 
-void MyWindowRenderer::doMovement()
-{
-    //camera controll
-    GLfloat cameraSpeed = 0.11f;
-    if(m_keys[Qt::Key_W])
-        cameraPos+=cameraSpeed*cameraFront;
-    if(m_keys[Qt::Key_S])
-        cameraPos-=cameraSpeed*cameraFront;
-    if(m_keys[Qt::Key_A])
-        cameraPos -=glm::normalize(glm::cross(cameraFront,cameraUp))*cameraSpeed;
-    if(m_keys[Qt::Key_D])
-        cameraPos +=glm::normalize(glm::cross(cameraFront,cameraUp))*cameraSpeed;
-}
+//void MyWindowRenderer::doMovement()
+//{
+//    //camera controll
+//    GLfloat cameraSpeed = 0.11f;
+//    if(m_keys[Qt::Key_W])
+//        cameraPos+=cameraSpeed*cameraFront;
+//    if(m_keys[Qt::Key_S])
+//        cameraPos-=cameraSpeed*cameraFront;
+//    if(m_keys[Qt::Key_A])
+//        cameraPos -=glm::normalize(glm::cross(cameraFront,cameraUp))*cameraSpeed;
+//    if(m_keys[Qt::Key_D])
+//        cameraPos +=glm::normalize(glm::cross(cameraFront,cameraUp))*cameraSpeed;
+//}
 
 void MyWindowRenderer::paint()
 {
@@ -340,14 +344,14 @@ void MyWindowRenderer::paint()
 //    glEnable(GL_BLEND);
 //    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D,texture);
-    m_program->setUniformValue("ourTexture1",0);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D,texture_mix);
-    m_program->setUniformValue("ourTexture2",1);
+//    glActiveTexture(GL_TEXTURE0);
+//    glBindTexture(GL_TEXTURE_2D,texture);
+//    m_program->setUniformValue("ourTexture1",0);
+//    glActiveTexture(GL_TEXTURE1);
+//    glBindTexture(GL_TEXTURE_2D,texture_mix);
+//    m_program->setUniformValue("ourTexture2",1);
 
-    m_program->setUniformValue("mixValue",float(mixValue));
+//    m_program->setUniformValue("mixValue",float(mixValue));
 
 
     m_program->setUniformValue("objectColor",1.0f,0.5f,0.31f);
@@ -369,24 +373,29 @@ void MyWindowRenderer::paint()
     m_program->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
     m_program->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
 
+    m_program->setUniformValue("lightPos",lightPos.x,lightPos.y,lightPos.z);
+
     glBindVertexArray(VAO);
-//    for(GLuint i = 0; i < 10; i++)
-//    {
-//      glm::mat4 model;
-//      model = glm::translate(model, cubePositions[i]);
-//      GLfloat angle = 0.2f * i ;
-//      model = glm::rotate(model, angle, glm::vec3(1.0f, 0.3f, 0.5f));
-//      m_program->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
+    for(GLuint i = 0; i < 10; i++)
+    {
+      glm::mat4 model;
+      model = glm::translate(model, cubePositions[i]);
+      GLfloat angle = 0.2f * i *tmp_counter;
+      model = glm::rotate(model, angle, glm::vec3(1.0f, 0.3f, 0.5f));
+      m_program->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
 
-//      glDrawArrays(GL_TRIANGLES, 0, 36);
-//    }
-    glm::mat4 model;
-    model = glm::translate(model,glm::vec3(.0f,.0f,.0f));
-    m_program->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
+      glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
+//    glm::mat4 model;
+//    model = glm::translate(model,glm::vec3(.0f,.0f,.0f));
+//    m_program->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
 
-    glDrawArrays(GL_TRIANGLES,0,36);
+
+//    glDrawArrays(GL_TRIANGLES,0,36);
 
     glBindVertexArray(0);
+
+
 
 
 
