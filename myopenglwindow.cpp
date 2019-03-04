@@ -24,9 +24,9 @@
 
 #include "mycamera.h"
 
-extern MyCamera global_camera(glm::vec3(1.0f, 2.0f,  5.0f));
+extern MyCamera global_camera(glm::vec3(0.0f, 2.0f,  2.0f));
 
-glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+glm::vec3 lightPos(0.0f,5.0f, -5.0f);
 
 glm::vec3 cubePositions[] = {
   glm::vec3(-8.8f, -2.0f, -2.3f),
@@ -78,7 +78,7 @@ MyOpenglWindow::MyOpenglWindow()
     updateTimer->start();
 
     global_camera.MovementSpeed=0.08f;
-    global_camera.Pitch = -10.0f;
+    global_camera.Pitch = -40.0f;
 //    global_camera.Yaw = 10.0f;
 
     this->installEventFilter(&global_camera);
@@ -356,6 +356,8 @@ void MyWindowRenderer::paint()
 
     m_program->setUniformValue("objectColor",1.0f,0.5f,0.31f);
     m_program->setUniformValue("lightColor",1.0f,1.0f,1.0f);
+    m_program->setUniformValue("lightPos",lightPos.x,lightPos.y,lightPos.z);
+    m_program->setUniformValue("viewPos",global_camera.Position.x,global_camera.Position.y,global_camera.Position.z);
 
     //Camera/View transformation
     glm::mat4 view;
@@ -373,25 +375,22 @@ void MyWindowRenderer::paint()
     m_program->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
     m_program->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
 
-    m_program->setUniformValue("lightPos",lightPos.x,lightPos.y,lightPos.z);
 
     glBindVertexArray(VAO);
-    for(GLuint i = 0; i < 10; i++)
-    {
-      glm::mat4 model;
-      model = glm::translate(model, cubePositions[i]);
-      GLfloat angle = 0.2f * i *tmp_counter;
-      model = glm::rotate(model, angle, glm::vec3(1.0f, 0.3f, 0.5f));
-      m_program->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
+//    for(GLuint i = 0; i < 10; i++)
+//    {
+//      glm::mat4 model;
+//      model = glm::translate(model, cubePositions[i]);
+//      GLfloat angle = 0.2f * i *tmp_counter;
+//      model = glm::rotate(model, angle, glm::vec3(1.0f, 0.3f, 0.5f));
+//      m_program->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
 
-      glDrawArrays(GL_TRIANGLES, 0, 36);
-    }
-//    glm::mat4 model;
-//    model = glm::translate(model,glm::vec3(.0f,.0f,.0f));
-//    m_program->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
-
-
-//    glDrawArrays(GL_TRIANGLES,0,36);
+//      glDrawArrays(GL_TRIANGLES, 0, 36);
+//    }
+    glm::mat4 model;
+    model = glm::translate(model,glm::vec3(.0f,.0f,.0f));
+    m_program->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
+    glDrawArrays(GL_TRIANGLES,0,36);
 
     glBindVertexArray(0);
 

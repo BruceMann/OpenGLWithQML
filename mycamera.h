@@ -41,8 +41,8 @@ public:
     GLfloat MouseSensitivity;
     GLfloat Zoom;
 
-    GLfloat lastX = 300.0f;
-    GLfloat lastY = 300.0f;
+    GLfloat lastX = 400.0f;
+    GLfloat lastY = 400.0f;
 
     QMap<int,bool> m_keys;
 
