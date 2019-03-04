@@ -18,10 +18,6 @@ class MyWindowRenderer:public QObject,protected QOpenGLExtraFunctions
 public:
     MyWindowRenderer():m_program(0),counter(0){
         timeClock.start();
-
-        fgShaderFile = ":/shaders/fragment_shader.frg";
-        vtShaderFile = ":/shaders/vertex_shader.vtx";
-
         renderInit();
     }
     ~MyWindowRenderer();
@@ -80,14 +76,14 @@ public:
     QTimer* updateTimer;
     int updateCount;
 
-    void keyPressEvent(QKeyEvent *event) override;
-    void keyReleaseEvent(QKeyEvent *event) override;
+//    void keyPressEvent(QKeyEvent *event) override;
+//    void keyReleaseEvent(QKeyEvent *event) override;
 
-    void hoverEnterEvent(QHoverEvent* event) override;
-    void hoverMoveEvent(QHoverEvent* event) override;
-    void hoverLeaveEvent(QHoverEvent* event) override;
+//    void hoverEnterEvent(QHoverEvent* event) override;
+//    void hoverMoveEvent(QHoverEvent* event) override;
+//    void hoverLeaveEvent(QHoverEvent* event) override;
 
-    void wheelEvent(QWheelEvent *event) override;
+//    void wheelEvent(QWheelEvent *event) override;
 
 signals:
     void mixValueChanged(qreal mixValue);
@@ -104,9 +100,8 @@ private slots:
 private:
     qreal m_mixValue;
     MyWindowRenderer* m_renderer;
-
-
 };
 //! [2]
+
 
 #endif // MYOPENGLWINDOW_H

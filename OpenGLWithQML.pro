@@ -19,7 +19,8 @@ DESTDIR = $$ECLASS_PATH_DIR/OpenGLWithQML/dst
 
 SOURCES += \
         main.cpp \
-    myopenglwindow.cpp
+    myopenglwindow.cpp \
+    mycamera.cpp
 
 RESOURCES += qml.qrc \
     src.qrc \
@@ -38,7 +39,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     myopenglwindow.h \
-    vertexdata.h
+    vertexdata.h \
+    mycamera.h
 
 DISTFILES +=
 
