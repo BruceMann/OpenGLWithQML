@@ -399,6 +399,7 @@ void MyWindowRenderer::paint()
     m_program->setUniformValue("light.direction",global_camera.Front.x,global_camera.Front.y,global_camera.Front.z);
     m_program->setUniformValue("light.position",global_camera.Position.x,global_camera.Position.y,global_camera.Position.z);
     m_program->setUniformValue("light.cutOff",glm::cos(glm::radians(12.5f)));
+    m_program->setUniformValue("light.outCutOff",glm::cos(glm::radians(15.5f))); //又打错了 吐血啊 outCurOff-->outCutOff;
 
     // set material
     m_program->setUniformValue("material.ambient",1.0f,0.5f,0.31f);

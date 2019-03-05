@@ -33,6 +33,7 @@ struct Light
     //聚光
     vec3 direction;
     float cutOff;
+    float outCutOff;
 
 };
 uniform Light light;
@@ -94,17 +95,28 @@ void main() {
     //specular *= attenuation;
 
     //计算聚光裁剪范围
-    vec3 result = vec3(0.0);
-    float theta = dot(lightDir,normalize(-light.direction));
-    if(theta>light.cutOff){
-        result = (ambient+diffuse+specular);
-    }else{
-        result = ambient;
-    }
+      vec3 result = vec3(0.0);
+      float theta = dot(lightDir,normalize(-light.direction));
+      if(theta>light.cutOff){
+          result = diffuse+specular;
+      }else if(theta<light.cutOff&&theta>light.outCutOff){
+          float epsilon = light.cutOff - light.outCutOff;
+          float intensity = clamp((theta-light.outCutOff)/epsilon,0.0,1.0);
+          diffuse*=intensity;
+          //specular*=intensity;
+          result = diffuse;
+      }else{
+          result = vec3(0.0);
+      }
+      result+=ambient;
+
+
+
+
 
     //vec3 result = (ambient + diffuse + specular) * objectColor;
 
-    // result = (ambient+diffuse+specular);
+     //result = (ambient + diffuse + specular);
     FragColor = vec4(result, 1.0f);
 
     //FragColor = vec4(objectColor,1.0);
