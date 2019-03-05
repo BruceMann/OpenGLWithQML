@@ -372,6 +372,9 @@ void MyWindowRenderer::paint()
     m_program->setUniformValue("light.ambient",ambientColor.x,ambientColor.y,ambientColor.z);
     m_program->setUniformValue("light.diffuse",diffuseColor.x,diffuseColor.y,diffuseColor.z);
     m_program->setUniformValue("light.specular",1.0f,1.0f,1.0f);
+//    m_program->setUniformValue("light.ambient",1.0f,1.0f,1.0f);
+//    m_program->setUniformValue("light.diffuse",1.0f,1.0f,1.0f);
+//    m_program->setUniformValue("light.specular",1.0f,1.0f,1.0f);
 
 
     // set material
@@ -379,6 +382,11 @@ void MyWindowRenderer::paint()
     m_program->setUniformValue("material.diffuse",1.0f,0.5f,0.31f);
     m_program->setUniformValue("material.specular",0.5f,0.5f,0.5f);
     m_program->setUniformValue("material.shininess",32.0f);  //打错material了 我有毒-，-
+    //青色(Cyan)的塑料箱子
+//    m_program->setUniformValue("material.ambient",0.0f, 0.1f, 0.06f);
+//    m_program->setUniformValue("material.diffuse", 0.0f, 0.50980392f, 0.50980392f);
+//    m_program->setUniformValue("material.specular",0.50196078f, 0.50196078f, 0.50196078f);
+
     //Camera/View transformation
     glm::mat4 view;
 //    GLfloat radius =13.0f;
