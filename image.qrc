@@ -3,5 +3,6 @@
         <file>image/wall.jpg</file>
         <file>image/awesomeface.png</file>
         <file>image/woodBox.jpg</file>
+        <file>image/container2.png</file>
     </qresource>
 </RCC>

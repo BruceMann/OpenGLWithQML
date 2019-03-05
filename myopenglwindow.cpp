@@ -26,7 +26,7 @@
 
 extern MyCamera global_camera(glm::vec3(0.0f, 2.0f,  2.0f));
 
-glm::vec3 lightPos(0.0f,5.0f, -5.0f);
+glm::vec3 lightPos(3.0f,5.0f, -5.0f);
 
 glm::vec3 cubePositions[] = {
   glm::vec3(-8.8f, -2.0f, -2.3f),
@@ -259,18 +259,19 @@ void MyWindowRenderer::renderInit()
 //    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 //    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    m_program->setAttributeBuffer(0,GL_FLOAT,(0 * sizeof(GLfloat)),3,6*sizeof(GLfloat));
+    m_program->setAttributeBuffer(0,GL_FLOAT,(0 * sizeof(GLfloat)),3,8*sizeof(GLfloat));
     m_program->enableAttributeArray(0);
-    m_program->setAttributeBuffer(1,GL_FLOAT,(3 * sizeof(GLfloat)),3,6*sizeof(GLfloat));
+    m_program->setAttributeBuffer(1,GL_FLOAT,(3 * sizeof(GLfloat)),3,8*sizeof(GLfloat));
     m_program->enableAttributeArray(1);
-//    m_program->setAttributeBuffer(2,GL_FLOAT,(6 * sizeof(GLfloat)),2,8*sizeof(GLfloat));
-//    m_program->enableAttributeArray(2);
+    m_program->setAttributeBuffer(2,GL_FLOAT,(6 * sizeof(GLfloat)),2,8*sizeof(GLfloat));
+    m_program->enableAttributeArray(2);
 
     glBindVertexArray(0);
 
-    genTexture(texture_mix,":/image/awesomeface.png");
+//    genTexture(texture_mix,":/image/awesomeface.png");
 //    genTexture(texture,":/image/wall.jpg");
-    genTexture(texture,":/image/woodBox.jpg");
+//    genTexture(texture,":/image/woodBox.jpg");
+    genTexture(texture,":/image/container2.png");
 
 
 //    if(!Light_ShaderProgram){
@@ -338,14 +339,15 @@ void MyWindowRenderer::paint()
 //    glDisable(GL_DEPTH_TEST);
     glEnable(GL_DEPTH_TEST);
 
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClearColor(0.1f, 0.21f, 0.16f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
 //    glEnable(GL_BLEND);
 //    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
-//    glActiveTexture(GL_TEXTURE0);
-//    glBindTexture(GL_TEXTURE_2D,texture);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D,texture);
+
 //    m_program->setUniformValue("ourTexture1",0);
 //    glActiveTexture(GL_TEXTURE1);
 //    glBindTexture(GL_TEXTURE_2D,texture_mix);
@@ -369,13 +371,12 @@ void MyWindowRenderer::paint()
     glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
 
     m_program->setUniformValue("light.position",lightPos.x,lightPos.y,lightPos.z);
-    m_program->setUniformValue("light.ambient",ambientColor.x,ambientColor.y,ambientColor.z);
-    m_program->setUniformValue("light.diffuse",diffuseColor.x,diffuseColor.y,diffuseColor.z);
+//    m_program->setUniformValue("light.ambient",ambientColor.x,ambientColor.y,ambientColor.z);
+//    m_program->setUniformValue("light.diffuse",diffuseColor.x,diffuseColor.y,diffuseColor.z);
     m_program->setUniformValue("light.specular",1.0f,1.0f,1.0f);
-//    m_program->setUniformValue("light.ambient",1.0f,1.0f,1.0f);
-//    m_program->setUniformValue("light.diffuse",1.0f,1.0f,1.0f);
+    m_program->setUniformValue("light.ambient",1.0f,1.0f,1.0f);
+    m_program->setUniformValue("light.diffuse",1.0f,1.0f,1.0f);
 //    m_program->setUniformValue("light.specular",1.0f,1.0f,1.0f);
-
 
     // set material
     m_program->setUniformValue("material.ambient",1.0f,0.5f,0.31f);

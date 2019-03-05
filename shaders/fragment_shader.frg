@@ -30,8 +30,9 @@ uniform Light light;
 
 struct Material
 {
-    vec3 ambient;
-    vec3 diffuse;
+    //vec3 ambient;
+    //vec3 diffuse;
+    sampler2D diffuse;
     vec3 specular;
     float shininess;
 };
@@ -50,14 +51,16 @@ void main() {
     //float ambientStrength = 0.1f;
     //vec3 ambient = ambientStrength * lightColor;
     //vec3 ambient = lightColor*material.ambient;
-    vec3 ambient = light.ambient*material.ambient;
+    //vec3 ambient = light.ambient*material.ambient;
+    vec3 ambient = light.ambient*vec3(texture(material.diffuse,TexCoord));
 
     //计算漫反射光照
     vec3 norm = normalize(Normal);
     vec3 lightDir = normalize(light.position - FragPos);
     float diff = max(dot(norm,lightDir),0.0);
     //vec3 diffuse = diff*lightColor;
-    vec3 diffuse = light.diffuse*diff*material.diffuse;
+    //vec3 diffuse = light.diffuse*diff*material.diffuse;
+    vec3 diffuse = light.diffuse*diff*vec3(texture(material.diffuse,TexCoord));
 
     // 计算镜面反射光照
     float specularStrength = 0.5f;
