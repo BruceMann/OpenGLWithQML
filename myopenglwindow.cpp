@@ -272,6 +272,7 @@ void MyWindowRenderer::renderInit()
 //    genTexture(texture,":/image/wall.jpg");
 //    genTexture(texture,":/image/woodBox.jpg");
     genTexture(texture,":/image/container2.png");
+    genTexture(texture_specularMap,":/image/container2_specular.png");
 
 
 //    if(!Light_ShaderProgram){
@@ -339,7 +340,8 @@ void MyWindowRenderer::paint()
 //    glDisable(GL_DEPTH_TEST);
     glEnable(GL_DEPTH_TEST);
 
-    glClearColor(0.1f, 0.21f, 0.16f, 1.0f);
+//    glClearColor(0.1f, 0.21f, 0.16f, 1.0f);
+    glClearColor(0.0f,0.0f,0.0f,1.0f);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
 //    glEnable(GL_BLEND);
@@ -347,6 +349,8 @@ void MyWindowRenderer::paint()
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D,texture);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D,texture_specularMap);
 
 //    m_program->setUniformValue("ourTexture1",0);
 //    glActiveTexture(GL_TEXTURE1);
@@ -374,14 +378,14 @@ void MyWindowRenderer::paint()
 //    m_program->setUniformValue("light.ambient",ambientColor.x,ambientColor.y,ambientColor.z);
 //    m_program->setUniformValue("light.diffuse",diffuseColor.x,diffuseColor.y,diffuseColor.z);
     m_program->setUniformValue("light.specular",1.0f,1.0f,1.0f);
-    m_program->setUniformValue("light.ambient",1.0f,1.0f,1.0f);
-    m_program->setUniformValue("light.diffuse",1.0f,1.0f,1.0f);
+    m_program->setUniformValue("light.ambient",0.2f,0.2f,0.2f);
+    m_program->setUniformValue("light.diffuse",0.5f,0.5f,0.5f);
 //    m_program->setUniformValue("light.specular",1.0f,1.0f,1.0f);
 
     // set material
     m_program->setUniformValue("material.ambient",1.0f,0.5f,0.31f);
-    m_program->setUniformValue("material.diffuse",1.0f,0.5f,0.31f);
-    m_program->setUniformValue("material.specular",0.5f,0.5f,0.5f);
+//    m_program->setUniformValue("material.diffuse",1.0f,0.5f,0.31f);
+//    m_program->setUniformValue("material.specular",0.5f,0.5f,0.5f);
     m_program->setUniformValue("material.shininess",32.0f);  //打错material了 我有毒-，-
     //青色(Cyan)的塑料箱子
 //    m_program->setUniformValue("material.ambient",0.0f, 0.1f, 0.06f);

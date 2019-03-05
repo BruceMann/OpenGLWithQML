@@ -33,7 +33,8 @@ struct Material
     //vec3 ambient;
     //vec3 diffuse;
     sampler2D diffuse;
-    vec3 specular;
+    //vec3 specular;
+    sampler2D specular;
     float shininess;
 };
 uniform Material material;
@@ -68,7 +69,7 @@ void main() {
     vec3 reflectDir = reflect(-lightDir, norm);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
     //vec3 specular = specularStrength * spec * lightColor;
-    vec3 specular = light.specular*(spec*material.specular);
+    vec3 specular = light.specular*spec*vec3(texture(material.specular,TexCoord));
 
     //vec3 result = (ambient + diffuse + specular) * objectColor;
     vec3 result = (ambient+diffuse+specular);

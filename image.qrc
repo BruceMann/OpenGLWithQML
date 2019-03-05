@@ -4,5 +4,6 @@
         <file>image/awesomeface.png</file>
         <file>image/woodBox.jpg</file>
         <file>image/container2.png</file>
+        <file>image/container2_specular.png</file>
     </qresource>
 </RCC>

@@ -31,6 +31,7 @@ public:
 
     GLuint texture;
     GLuint texture_mix;
+    GLuint texture_specularMap;
     uchar* imageBits;
 
     QString fgShaderFile;
