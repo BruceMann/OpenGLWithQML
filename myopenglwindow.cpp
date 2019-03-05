@@ -381,6 +381,7 @@ void MyWindowRenderer::paint()
     glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
 
     m_program->setUniformValue("light.position",lightPos.x,lightPos.y,lightPos.z);
+    m_program->setUniformValue("light.direction",-0.2f,-1.0f,-0.3f);
 //    m_program->setUniformValue("light.ambient",ambientColor.x,ambientColor.y,ambientColor.z);
 //    m_program->setUniformValue("light.diffuse",diffuseColor.x,diffuseColor.y,diffuseColor.z);
     m_program->setUniformValue("light.specular",1.0f,1.0f,1.0f);
@@ -416,20 +417,20 @@ void MyWindowRenderer::paint()
 
 
     glBindVertexArray(VAO);
-//    for(GLuint i = 0; i < 10; i++)
-//    {
-//      glm::mat4 model;
-//      model = glm::translate(model, cubePositions[i]);
-//      GLfloat angle = 0.2f * i *tmp_counter;
-//      model = glm::rotate(model, angle, glm::vec3(1.0f, 0.3f, 0.5f));
-//      m_program->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
+    for(GLuint i = 0; i < 10; i++)
+    {
+      glm::mat4 model;
+      model = glm::translate(model, cubePositions[i]);
+      GLfloat angle = 20.0f * i ;
+      model = glm::rotate(model, angle, glm::vec3(1.0f, 0.3f, 0.5f));
+      m_program->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
 
-//      glDrawArrays(GL_TRIANGLES, 0, 36);
-//    }
-    glm::mat4 model;
-    model = glm::translate(model,glm::vec3(.0f,.0f,.0f));
-    m_program->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
-    glDrawArrays(GL_TRIANGLES,0,36);
+      glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
+//    glm::mat4 model;
+//    model = glm::translate(model,glm::vec3(.0f,.0f,.0f));
+//    m_program->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
+//    glDrawArrays(GL_TRIANGLES,0,36);
 
     glBindVertexArray(0);
 
