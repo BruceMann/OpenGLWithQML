@@ -24,9 +24,9 @@
 
 #include "mycamera.h"
 
-extern MyCamera global_camera(glm::vec3(0.0f, 2.0f,  2.0f));
+extern MyCamera global_camera(glm::vec3(1.43, 2.6f,  2.3f));
 
-glm::vec3 lightPos(3.0f,5.0f, -5.0f);
+glm::vec3 lightPos(-3.0f,5.0f, -5.0f);
 
 glm::vec3 cubePositions[] = {
   glm::vec3(-8.8f, -2.0f, -2.3f),
@@ -78,8 +78,8 @@ MyOpenglWindow::MyOpenglWindow()
     updateTimer->start();
 
     global_camera.MovementSpeed=0.08f;
-    global_camera.Pitch = -40.0f;
-//    global_camera.Yaw = 10.0f;
+    global_camera.Pitch = -35.7f;
+    global_camera.Yaw = -111.3f;
 
     this->installEventFilter(&global_camera);
 
@@ -273,6 +273,7 @@ void MyWindowRenderer::renderInit()
 //    genTexture(texture,":/image/woodBox.jpg");
     genTexture(texture,":/image/container2.png");
     genTexture(texture_specularMap,":/image/container2_specular.png");
+    genTexture(texture_emissionMap,":/image/matrix.jpg");
 
 
 //    if(!Light_ShaderProgram){
@@ -349,8 +350,13 @@ void MyWindowRenderer::paint()
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D,texture);
+    m_program->setUniformValue("material.diffuse",0);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D,texture_specularMap);
+    m_program->setUniformValue("material.specular",1);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D,texture_emissionMap);
+    m_program->setUniformValue("material.emission",2);
 
 //    m_program->setUniformValue("ourTexture1",0);
 //    glActiveTexture(GL_TEXTURE1);

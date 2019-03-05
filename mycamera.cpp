@@ -30,6 +30,12 @@ bool MyCamera::eventFilter(QObject *obj, QEvent *event)
 //        qDebug() << "KeyPressed:: "<<key_evet->key();
         m_keys[key_evet->key()] = true;
 //        doMovement();
+        if(key_evet->key()==Qt::Key_T){
+           qDebug()<<"Camera Position:: "<<Position.x<<" "<<Position.y<<" "<<Position.z;
+           qDebug()<<"Camera Yaw:: "<<Yaw;
+           qDebug()<<"Camera Pitch:: "<<Pitch;
+
+        }
         return true;
     }else if(event->type() == QEvent::KeyRelease){
         QKeyEvent* key_evet = static_cast<QKeyEvent*>(event);
