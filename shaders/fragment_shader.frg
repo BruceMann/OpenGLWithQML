@@ -21,11 +21,15 @@ uniform vec3 lightColor;
 
 struct Light
 {
-    //vec3 position; 平行光暂时不需要光源位置 只需要光源方向
-    vec3 direction;
+    vec3 position;  //平行光暂时不需要光源位置 只需要光源方向
+    //vec3 direction;
     vec3 ambient;
     vec3 diffuse;
     vec3 specular;
+    //衰减系数
+    float constant;
+    float linear;
+    float quadratic;
 };
 uniform Light light;
 
@@ -59,8 +63,8 @@ void main() {
 
     //计算漫反射光照
     vec3 norm = normalize(Normal);
-    //vec3 lightDir = normalize(light.position - FragPos);
-    vec3 lightDir = normalize(-light.direction);
+    vec3 lightDir = normalize(light.position - FragPos);
+    //vec3 lightDir = normalize(-light.direction);
     float diff = max(dot(norm,lightDir),0.0);
     //vec3 diffuse = diff*lightColor;
     //vec3 diffuse = light.diffuse*diff*material.diffuse;
@@ -76,6 +80,14 @@ void main() {
 
     //添加发射光贴图
     vec3 emit = vec3(texture(material.emission,TexCoord));
+
+    //计算点光源衰减
+    float distance = length(light.position - FragPos);
+    float attenuation = 1.0f/(light.constant+light.linear*distance+light.quadratic*(distance*distance));
+
+    ambient *= attenuation;
+    diffuse *= attenuation;
+    specular *= attenuation;
 
     //vec3 result = (ambient + diffuse + specular) * objectColor;
 

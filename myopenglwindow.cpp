@@ -26,7 +26,8 @@
 
 extern MyCamera global_camera(glm::vec3(1.43, 2.6f,  2.3f));
 
-glm::vec3 lightPos(-3.0f,5.0f, -5.0f);
+//glm::vec3 lightPos(-3.0f,5.0f, -5.0f);
+glm::vec3 lightPos(0.0f,0.0f,0.0f);
 
 glm::vec3 cubePositions[] = {
   glm::vec3(-8.8f, -2.0f, -2.3f),
@@ -388,6 +389,12 @@ void MyWindowRenderer::paint()
     m_program->setUniformValue("light.ambient",0.2f,0.2f,0.2f);
     m_program->setUniformValue("light.diffuse",0.5f,0.5f,0.5f);
 //    m_program->setUniformValue("light.specular",1.0f,1.0f,1.0f);
+
+    // 设置点光源衰减系数
+    m_program->setUniformValue("light.constant",1.0f);
+    m_program->setUniformValue("light.linear",0.09f);
+    m_program->setUniformValue("light.quadratic",0.032f);
+
 
     // set material
     m_program->setUniformValue("material.ambient",1.0f,0.5f,0.31f);
