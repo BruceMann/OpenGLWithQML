@@ -34,10 +34,36 @@ struct Light
     vec3 direction;
     float cutOff;
     float outCutOff;
-
 };
 uniform Light light;
 
+//平行光结构
+struct DirLight
+{
+    vec3 direction;
+
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
+uniform DirLight dirLight;
+
+//点光源结构
+struct PointLight
+{
+    vec3 position;
+    float constant;
+    float linear;
+    float quadratic;
+
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
+uniform PointLight pointLight;
+
+
+//材质结构
 struct Material
 {
     //vec3 ambient;
@@ -50,6 +76,39 @@ struct Material
 };
 uniform Material material;
 
+vec3 CalcDirLight(DirLight light,vec3 normal,vec3 viewDir){
+    vec3 lightDir = normalize(-light.direction);
+    //计算漫反射光强
+    float diff = max(dot(lightDir,normal),0.0);
+    //计算镜面反射光强
+    vec3 reflectDir = reflect(-lightDir,normal);
+    float spec = pow(max(dot(reflectDir,viewDir),0.0),material.shininess);
+    //合并各个光照分量
+    vec3 ambient = light.ambient * vec3(texture(material.diffuse,TexCoord));
+    vec3 diffuse = light.diffuse * vec3(texture(material.diffuse,TexCoord));
+    vec3 specular = light.specular*vec3(texture(material.specular,TextCoord));
+    return (ambient+diffuse+specular);
+}
+
+vec3 CalcPointLight(PointLight light,vec3 normal,vec3 fragPos,vec3 viewDir){
+    vec3 lightDir = normalize(light.position - fragPos);
+    //计算漫反射光强
+    float diffuse = max(dot(lightDir,normal),0.0);
+    //计算镜面反射
+    vec3 reflectDir = reflect(-lightDir,normal);
+    float spec = pow(max(dot(reflectDir,viewDir),0.0),material.shininess);
+    //计算衰减
+    float distance = length(light.position-fragPos);
+    float attenuation = 1.0/(light.constant+distance*light.linear+distance*distance*light.quadratic);
+    //将各个分量合并
+    vec3 ambient = light.ambient * vec3(texture(material.diffuse,TexCoord));
+    vec3 diffuse = light.diffuse * vec3(texture(material.diffuse,TexCoord));
+    vec3 specular = light.specular*vec3(texture(material.specular,TextCoord));
+    ambient *= attenuation;
+    diffuse *= attenuation;
+    specular *=attenuation;
+    return (ambient+diffuse+specular);
+}
 
 
 void main() {
