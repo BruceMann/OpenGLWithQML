@@ -95,20 +95,24 @@ void main() {
     //specular *= attenuation;
 
     //计算聚光裁剪范围
-      vec3 result = vec3(0.0);
-      float theta = dot(lightDir,normalize(-light.direction));
-      if(theta>light.cutOff){
-          result = diffuse+specular;
-      }else if(theta<light.cutOff&&theta>light.outCutOff){
-          float epsilon = light.cutOff - light.outCutOff;
-          float intensity = clamp((theta-light.outCutOff)/epsilon,0.0,1.0);
-          diffuse*=intensity;
-          //specular*=intensity;
-          result = diffuse;
-      }else{
-          result = vec3(0.0);
-      }
-      result+=ambient;
+    // vec3 result = vec3(0.0);
+    // float theta = dot(lightDir,normalize(-light.direction));
+    // if(theta>light.cutOff){
+    //     result = diffuse+specular;
+    // }else if(theta<light.cutOff&&theta>light.outCutOff){
+    //     float epsilon = light.cutOff - light.outCutOff;
+    //     float intensity = clamp((theta-light.outCutOff)/epsilon,0.0,1.0);
+    //     diffuse*=intensity;
+    //     //specular*=intensity;
+    //     result = diffuse;
+    // }else{
+    //     result = vec3(0.0);
+    // }
+    // result+=ambient;
+    //简化聚光边缘的计算
+    float theta = dot(lightDir,normalize(-light.direction));
+    float intensity = smoothstep(light.outCutOff,light.cutOff,theta);
+    vec3 result = ambient+intensity*(diffuse+specular);
 
 
 
