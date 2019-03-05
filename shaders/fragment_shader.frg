@@ -30,6 +30,10 @@ struct Light
     float constant;
     float linear;
     float quadratic;
+    //聚光
+    vec3 direction;
+    float cutOff;
+
 };
 uniform Light light;
 
@@ -82,16 +86,25 @@ void main() {
     vec3 emit = vec3(texture(material.emission,TexCoord));
 
     //计算点光源衰减
-    float distance = length(light.position - FragPos);
-    float attenuation = 1.0f/(light.constant+light.linear*distance+light.quadratic*(distance*distance));
+    //float distance = length(light.position - FragPos);
+    //float attenuation = 1.0f/(light.constant+light.linear*distance+light.quadratic*(distance*distance));
 
-    ambient *= attenuation;
-    diffuse *= attenuation;
-    specular *= attenuation;
+    //ambient *= attenuation;
+    //diffuse *= attenuation;
+    //specular *= attenuation;
+
+    //计算聚光裁剪范围
+    vec3 result = vec3(0.0);
+    float theta = dot(lightDir,normalize(-light.direction));
+    if(theta>light.cutOff){
+        result = (ambient+diffuse+specular);
+    }else{
+        result = ambient;
+    }
 
     //vec3 result = (ambient + diffuse + specular) * objectColor;
 
-    vec3 result = (ambient+diffuse+specular);
+    // result = (ambient+diffuse+specular);
     FragColor = vec4(result, 1.0f);
 
     //FragColor = vec4(objectColor,1.0);

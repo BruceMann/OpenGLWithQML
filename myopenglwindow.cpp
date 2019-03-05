@@ -381,7 +381,7 @@ void MyWindowRenderer::paint()
     glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
     glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
 
-    m_program->setUniformValue("light.position",lightPos.x,lightPos.y,lightPos.z);
+    //m_program->setUniformValue("light.position",lightPos.x,lightPos.y,lightPos.z);
     m_program->setUniformValue("light.direction",-0.2f,-1.0f,-0.3f);
 //    m_program->setUniformValue("light.ambient",ambientColor.x,ambientColor.y,ambientColor.z);
 //    m_program->setUniformValue("light.diffuse",diffuseColor.x,diffuseColor.y,diffuseColor.z);
@@ -391,10 +391,14 @@ void MyWindowRenderer::paint()
 //    m_program->setUniformValue("light.specular",1.0f,1.0f,1.0f);
 
     // 设置点光源衰减系数
-    m_program->setUniformValue("light.constant",1.0f);
-    m_program->setUniformValue("light.linear",0.09f);
-    m_program->setUniformValue("light.quadratic",0.032f);
+//    m_program->setUniformValue("light.constant",1.0f);
+//    m_program->setUniformValue("light.linear",0.09f);
+//    m_program->setUniformValue("light.quadratic",0.032f);
 
+    //设置聚光参数
+    m_program->setUniformValue("light.direction",global_camera.Front.x,global_camera.Front.y,global_camera.Front.z);
+    m_program->setUniformValue("light.position",global_camera.Position.x,global_camera.Position.y,global_camera.Position.z);
+    m_program->setUniformValue("light.cutOff",glm::cos(glm::radians(12.5f)));
 
     // set material
     m_program->setUniformValue("material.ambient",1.0f,0.5f,0.31f);
