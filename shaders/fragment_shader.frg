@@ -19,6 +19,25 @@ uniform vec3 lightPos;
 uniform vec3 objectColor;
 uniform vec3 lightColor;
 
+struct Light
+{
+    vec3 position;
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
+uniform Light light;
+
+struct Material
+{
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    float shininess;
+};
+uniform Material material;
+
+
 
 void main() {
     //FragColor =texture(ourTexture1, TexCoord);
@@ -28,22 +47,28 @@ void main() {
 
     //Color and light test
     //计算环境光
-    float ambientStrength = 0.1f;
-    vec3 ambient = ambientStrength * lightColor;
+    //float ambientStrength = 0.1f;
+    //vec3 ambient = ambientStrength * lightColor;
+    //vec3 ambient = lightColor*material.ambient;
+    vec3 ambient = light.ambient*material.ambient;
+
     //计算漫反射光照
     vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(lightPos - FragPos);
+    vec3 lightDir = normalize(light.position - FragPos);
     float diff = max(dot(norm,lightDir),0.0);
-    vec3 diffuse = diff*lightColor;
-    // Specular
+    //vec3 diffuse = diff*lightColor;
+    vec3 diffuse = light.diffuse*diff*material.diffuse;
+
+    // 计算镜面反射光照
     float specularStrength = 0.5f;
-    vec3 viewDir = normalize(viewPos - FragPos);
+    vec3 viewDir = normalize(viewPos-FragPos);
     vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 128);
-    vec3 specular = specularStrength * spec * lightColor;
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    //vec3 specular = specularStrength * spec * lightColor;
+    vec3 specular = light.specular*(spec*material.specular);
 
-    vec3 result = (ambient + diffuse + specular) * objectColor;
-
+    //vec3 result = (ambient + diffuse + specular) * objectColor;
+    vec3 result = (ambient+diffuse+specular);
     FragColor = vec4(result, 1.0f);
 
     //FragColor = vec4(objectColor,1.0);

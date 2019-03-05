@@ -356,9 +356,29 @@ void MyWindowRenderer::paint()
 
     m_program->setUniformValue("objectColor",1.0f,0.5f,0.31f);
     m_program->setUniformValue("lightColor",1.0f,1.0f,1.0f);
-    m_program->setUniformValue("lightPos",lightPos.x,lightPos.y,lightPos.z);
+    //m_program->setUniformValue("lightPos",lightPos.x,lightPos.y,lightPos.z);
     m_program->setUniformValue("viewPos",global_camera.Position.x,global_camera.Position.y,global_camera.Position.z);
 
+    // set light
+    glm::vec3 lightColor;
+    lightColor.x = sin(tmp_counter * 2.0f);
+    lightColor.y = sin(tmp_counter * 0.7f);
+    lightColor.z = sin(tmp_counter* 1.3f);
+
+    glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
+    glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
+
+    m_program->setUniformValue("light.position",lightPos.x,lightPos.y,lightPos.z);
+    m_program->setUniformValue("light.ambient",ambientColor.x,ambientColor.y,ambientColor.z);
+    m_program->setUniformValue("light.diffuse",diffuseColor.x,diffuseColor.y,diffuseColor.z);
+    m_program->setUniformValue("light.specular",1.0f,1.0f,1.0f);
+
+
+    // set material
+    m_program->setUniformValue("material.ambient",1.0f,0.5f,0.31f);
+    m_program->setUniformValue("material.diffuse",1.0f,0.5f,0.31f);
+    m_program->setUniformValue("material.specular",0.5f,0.5f,0.5f);
+    m_program->setUniformValue("material.shininess",32.0f);  //打错material了 我有毒-，-
     //Camera/View transformation
     glm::mat4 view;
 //    GLfloat radius =13.0f;
