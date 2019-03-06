@@ -1,7 +1,6 @@
 #include "myopenglwindow.h"
 
 #include <QtQuick/qquickwindow.h>
-#include <QtGui/QOpenGLContext>
 
 #include <QOpenGLShaderProgram>
 #include <QOpenGLFunctions_3_0>
@@ -24,7 +23,11 @@
 
 #include "mycamera.h"
 
-extern MyCamera global_camera(glm::vec3(1.43, 2.6f,  2.3f));
+#include "model.h"
+
+Model global_Model;
+
+MyCamera global_camera(glm::vec3(1.43, 2.6f,  2.3f));
 
 //glm::vec3 lightPos(-3.0f,5.0f, -5.0f);
 glm::vec3 lightPos(0.0f,0.0f,0.0f);
@@ -42,22 +45,9 @@ glm::vec3 cubePositions[] = {
   glm::vec3(-1.3f,  1.0f, -1.5f)
 };
 
-// Camera
-//glm::vec3 cameraPos   = glm::vec3(1.0f, 2.0f,  5.0f);
-//glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-//glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
-//GLfloat yaw = -90.0f;
-//GLfloat pitch = -10.0f;
-//GLfloat lastX = 300.0f;
-//GLfloat lastY = 300.0f;
-//GLfloat fov = 45.0f;
-
 //Deltatime
 GLfloat deltaTime = 0.0f;   //Time between current frame and last frame
 GLfloat lastFrame = 0.0f;   //Time of last frame
-
-//bool m_keys[1024] = {false};   //记录按键 实现组合按键
-QMap<int,bool> m_keys;
 
 MyOpenglWindow::MyOpenglWindow()
     :m_renderer(nullptr)
@@ -85,112 +75,6 @@ MyOpenglWindow::MyOpenglWindow()
     this->installEventFilter(&global_camera);
 
 }
-
-void MyOpenglWindow::readShaderFile( QString vxShaderFile,  QString fgShaderFile)
-{
-    QFile* vsFile;
-    QFile* fgFile;
-    qDebug()<<vxShaderFile;
-    vsFile = new QFile(vxShaderFile);
-    if(vsFile->exists()){
-        if(vsFile->open(QIODevice::ReadOnly)){
-            //m_renderer->m_vt_shader_file = QString(vsFile->readAll());
-            qDebug()<<QString(vsFile->readAll());
-        }else
-            qDebug()<<"vxShaderFile open failed !!!";
-    }else
-        qDebug()<<"vxShaderFile is not existed !!!";
-
-    qDebug()<<fgShaderFile;
-    fgFile = new QFile(fgShaderFile);
-    if(fgFile->exists()){
-        if(fgFile->open(QIODevice::ReadOnly)){
-            //m_renderer->m_fg_shader_file = QString(fgFile->readAll());
-            qDebug()<<QString(fgFile->readAll());
-        }else
-            qDebug()<<"vxShaderFile open failed !!!";
-    }else
-        qDebug()<<"vxShaderFile is not existed !!!";
-}
-
-//void MyOpenglWindow::keyPressEvent(QKeyEvent *event)
-//{
-////    qDebug() << "KeyPressed:: "<<event->key();
-//    m_keys[event->key()] = true;
-//}
-
-//void MyOpenglWindow::keyReleaseEvent(QKeyEvent *event)
-//{
-//    if(event->isAutoRepeat() ) {
-//        event->ignore();
-//    } else {
-////        qDebug() << "keyReleaseEvent:: "<<event->key() ;
-//        m_keys[event->key()] = false;
-//    }
-//}
-
-//void MyOpenglWindow::hoverEnterEvent(QHoverEvent *event)
-//{
-//    lastX = (GLfloat)event->posF().x();
-//    lastY = (GLfloat)event->posF().y();
-
-//    qDebug()<<"hoverEnter event:: "<<lastX<<" "<<lastY;
-//}
-
-//void MyOpenglWindow::hoverMoveEvent(QHoverEvent *event)
-//{
-//    GLfloat curPosX = (GLfloat)event->posF().x();
-//    GLfloat curPosY = (GLfloat)event->posF().y();
-//    qDebug()<<"hoverMoveEvent event:: "<<curPosX<<" "<<curPosY;
-
-//    GLfloat xoffset = curPosX - lastX;
-//    GLfloat yoffset = lastY - curPosY;
-//    lastX = curPosX;
-//    lastY = curPosY;
-//    qDebug()<<"xoffset::  "<<xoffset<<"yoffset:: "<<yoffset;
-
-//    GLfloat sensitivity = 0.1f;
-//    xoffset *= sensitivity;
-//    yoffset *= sensitivity;
-
-//    yaw += xoffset;
-//    pitch += yoffset;
-
-//    if(pitch>89.0f)
-//        pitch = 89.0f;
-//    if(pitch<-89.0f)
-//        pitch = -89.0f;
-
-//    glm::vec3 front;
-//    front.x = cos(glm::radians(yaw))*cos(glm::radians(pitch));
-//    front.y = sin(glm::radians(pitch));
-//    front.z = sin(glm::radians(yaw))*cos(glm::radians(pitch));
-//    cameraFront = glm::normalize(front);
-//}
-
-//void MyOpenglWindow::hoverLeaveEvent(QHoverEvent *event)
-//{
-//    Q_UNUSED(event)
-
-//}
-
-//void MyOpenglWindow::wheelEvent(QWheelEvent *event)
-//{
-//    qDebug()<<"wheelEvent ::  "<<event->angleDelta().x()<<" "<<event->angleDelta().y();
-//    QPoint numSteps = event->angleDelta()/120;
-//    qDebug()<<"wheelEvent ::  "<<numSteps.x()<<" "<<numSteps.y();
-//    double yoffset = numSteps.y();
-
-//    if(fov>=1.0f && fov <=45.0f)
-//        fov -= yoffset*0.1;
-//    if (fov <= 1.0f)
-//        fov = 1.0f;
-//    if (fov >= 45.0f)
-//        fov = 45.0f;
-
-//    qDebug()<<"FOV"<<fov;
-
-//}
 
 void MyOpenglWindow::sync()
 {
@@ -284,8 +168,16 @@ void MyWindowRenderer::renderInit()
 //        Light_ShaderProgram->addShaderFromSourceFile(QOpenGLShader::Fragment,":/shaders/color_light.frg");
 //        Light_ShaderProgram->link();
 //    }
+    global_Model.LoadModel("G:/AssimpModel/nanosuit/nanosuit.obj");
 
-
+    if(!loadModel_ShaderProgram){
+        initializeOpenGLFunctions();
+        loadModel_ShaderProgram = new QOpenGLShaderProgram();
+        loadModel_ShaderProgram->addShaderFromSourceFile(QOpenGLShader::Vertex,":/shaders/model_loading.vs");
+        loadModel_ShaderProgram->addShaderFromSourceFile(QOpenGLShader::Fragment,":/shaders/model_loading.fs");
+        loadModel_ShaderProgram->link();
+    }
+    loadModel_ShaderProgram->bind();
 }
 
 void MyWindowRenderer::genTexture(GLuint& texture,const QString& imageFile)
@@ -314,20 +206,6 @@ void MyWindowRenderer::genTexture(GLuint& texture,const QString& imageFile)
     glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture when done, so we won't accidentily mess up our texture.
 }
 
-//void MyWindowRenderer::doMovement()
-//{
-//    //camera controll
-//    GLfloat cameraSpeed = 0.11f;
-//    if(m_keys[Qt::Key_W])
-//        cameraPos+=cameraSpeed*cameraFront;
-//    if(m_keys[Qt::Key_S])
-//        cameraPos-=cameraSpeed*cameraFront;
-//    if(m_keys[Qt::Key_A])
-//        cameraPos -=glm::normalize(glm::cross(cameraFront,cameraUp))*cameraSpeed;
-//    if(m_keys[Qt::Key_D])
-//        cameraPos +=glm::normalize(glm::cross(cameraFront,cameraUp))*cameraSpeed;
-//}
-
 void MyWindowRenderer::paint()
 {
     double tmp_counter = (double)timeClock.elapsed()*0.001;   //millisecond --> seconds
@@ -335,7 +213,7 @@ void MyWindowRenderer::paint()
 //    doMovement();
     global_camera.doMovement();
 
-    m_program->bind();
+    //m_program->bind();   //tmp for load model
 
     glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
 
@@ -428,23 +306,33 @@ void MyWindowRenderer::paint()
     m_program->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
 
 
-    glBindVertexArray(VAO);
-    for(GLuint i = 0; i < 10; i++)
-    {
-      glm::mat4 model;
-      model = glm::translate(model, cubePositions[i]);
-      GLfloat angle = 20.0f * i ;
-      model = glm::rotate(model, angle, glm::vec3(1.0f, 0.3f, 0.5f));
-      m_program->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
+    loadModel_ShaderProgram->bind();
+    loadModel_ShaderProgram->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
+    loadModel_ShaderProgram->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
 
-      glDrawArrays(GL_TRIANGLES, 0, 36);
-    }
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
+    model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
+    loadModel_ShaderProgram->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
+    global_Model.Draw(loadModel_ShaderProgram);
+
+//    glBindVertexArray(VAO);
+//    for(GLuint i = 0; i < 10; i++)
+//    {
+//      glm::mat4 model;
+//      model = glm::translate(model, cubePositions[i]);
+//      GLfloat angle = 20.0f * i ;
+//      model = glm::rotate(model, angle, glm::vec3(1.0f, 0.3f, 0.5f));
+//      m_program->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
+
+//      glDrawArrays(GL_TRIANGLES, 0, 36);
+//    }
 //    glm::mat4 model;
 //    model = glm::translate(model,glm::vec3(.0f,.0f,.0f));
 //    m_program->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
 //    glDrawArrays(GL_TRIANGLES,0,36);
 
-    glBindVertexArray(0);
+//    glBindVertexArray(0);
 
 
 

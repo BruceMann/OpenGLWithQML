@@ -16,7 +16,7 @@ class MyWindowRenderer:public QObject,protected QOpenGLExtraFunctions
 {
     Q_OBJECT
 public:
-    MyWindowRenderer():m_program(0),counter(0){
+    MyWindowRenderer():m_program(0),counter(0),loadModel_ShaderProgram(0){
         timeClock.start();
         renderInit();
     }
@@ -53,6 +53,7 @@ private:
     QSize m_viewportSize;
     QOpenGLShaderProgram *m_program;
     QOpenGLShaderProgram *Light_ShaderProgram;
+    QOpenGLShaderProgram *loadModel_ShaderProgram;
     QQuickWindow *m_window;
 };
 //! [1]
@@ -66,8 +67,6 @@ class MyOpenglWindow:public QQuickItem
 public:
     MyOpenglWindow();
 
-    void readShaderFile(QString vxShaderFile, QString fgShaderFile);
-
     qreal mixValue(){return m_mixValue;}
     void setmixValue(qreal value){
         m_mixValue = value;
@@ -78,15 +77,6 @@ public:
 
     QTimer* updateTimer;
     int updateCount;
-
-//    void keyPressEvent(QKeyEvent *event) override;
-//    void keyReleaseEvent(QKeyEvent *event) override;
-
-//    void hoverEnterEvent(QHoverEvent* event) override;
-//    void hoverMoveEvent(QHoverEvent* event) override;
-//    void hoverLeaveEvent(QHoverEvent* event) override;
-
-//    void wheelEvent(QWheelEvent *event) override;
 
 signals:
     void mixValueChanged(qreal mixValue);

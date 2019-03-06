@@ -7,6 +7,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <QtGui/QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLExtraFunctions>
 
@@ -18,6 +19,8 @@ struct Vertex
     glm::vec3 Position;
     glm::vec2 Normal;
     glm::vec2 TexCoords;
+    glm::vec3 Tangent;
+    glm::vec3 Bitangent;
 };
 
 struct Texture

@@ -2,13 +2,28 @@
 
 #include <QImage>
 
-Model::Model(QString path)
+#include <QDebug>
+
+Model::Model()
 {
 
 }
 
+Model::Model(QString path)
+{
+    this->LoadModel(path);
+}
+
+void Model::Draw(QOpenGLShaderProgram *shader)
+{
+    for(GLuint i=0;i<this->meshes.size();++i){
+        this->meshes[i].Draw(shader);
+    }
+}
+
 void Model::LoadModel(QString path)
 {
+    initializeOpenGLFunctions();
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(path.toStdString(),aiProcess_Triangulate|aiProcess_FlipUVs);
     //check for errors
@@ -19,6 +34,7 @@ void Model::LoadModel(QString path)
     }
     //retrieve the directory path of the filepath
     this->directory = path.mid(0,path.lastIndexOf('/'));
+    qDebug()<<"LoadModel:: "<<path<<" directory:: "<<directory;
 
     this->processNode(scene->mRootNode,scene);
 }
@@ -28,6 +44,11 @@ void Model::processNode(aiNode *node, const aiScene *scene)
     for(GLuint i=0;i<node->mNumMeshes;++i){
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
         this->meshes.append(this->processMesh(mesh,scene));
+    }
+    // After we've processed all of the meshes (if any) we then recursively process each of the children nodes
+    for(GLuint i = 0; i < node->mNumChildren; i++)
+    {
+        this->processNode(node->mChildren[i], scene);
     }
 }
 
@@ -98,7 +119,9 @@ QVector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type
     for(GLuint i=0;i<mat->GetTextureCount(type);++i){
         aiString str;
         mat->GetTexture(type,i,&str);
-        QString qStr(str.C_Str());
+        std::string sttt(str.C_Str());
+        QString qStr = QString::fromStdString(sttt);
+        qDebug()<<qStr;
         bool isloaded = false;
         for(GLuint j;j<textures_loaded.size();++j){
             if(textures_loaded[i].path==qStr){
@@ -122,7 +145,8 @@ GLuint Model::TextureFromFile(const QString path, QString directory)
 {
     //Generate texture ID and load texture data
     QString filename = QString(path);
-    filename = directory+'/'+filename;
+    filename = directory+"/"+filename;
+    qDebug()<<filename;
     GLuint textureID;
     glGenTextures(1,&textureID);
     int width,height;

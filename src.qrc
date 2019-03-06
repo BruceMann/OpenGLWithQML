@@ -4,5 +4,7 @@
         <file>shaders/vertex_shader.vtx</file>
         <file>shaders/color_light.frg</file>
         <file>shaders/color_light.vtx</file>
+        <file>shaders/model_loading.fs</file>
+        <file>shaders/model_loading.vs</file>
     </qresource>
 </RCC>

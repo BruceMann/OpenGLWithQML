@@ -34,16 +34,15 @@ void Mesh::Draw(QOpenGLShaderProgram *shader)
     //draw mesh
     glBindVertexArray(this->VAO);
     glDrawElements(GL_TRIANGLES,this->indices.size(),GL_UNSIGNED_INT,0);
+    glBindVertexArray(0);
 
     //always good practice to set everything back to defaults once configured.
-    for(GLuint i=0;i<this->textures.size();++i){
-        glActiveTexture(GL_TEXTURE0+i);
-        glBindTexture(GL_TEXTURE_2D,0);
-    }
+    glActiveTexture(GL_TEXTURE0);
 }
 
 void Mesh::setupMesh()
 {
+    initializeOpenGLFunctions();
     glGenVertexArrays(1,&this->VAO);
     glGenBuffers(1,&this->VBO);
     glGenBuffers(1,&this->EBO);
@@ -52,15 +51,25 @@ void Mesh::setupMesh()
     glBindBuffer(GL_ARRAY_BUFFER,this->VBO);
     glBufferData(GL_ARRAY_BUFFER,this->vertices.size()*sizeof(Vertex),&this->vertices[0],GL_STATIC_DRAW);
 
-    //vertex position
-    m_shader->enableAttributeArray(0);
-    m_shader->setAttributeBuffer(0,GL_FLOAT,0,sizeof(Vertex));
-    //vertex normal
-    m_shader->enableAttributeArray(1);
-    m_shader->setAttributeBuffer(1,GL_FLOAT,offsetof(Vertex,Normal),sizeof(Vertex));
-    //vertex texture Coods
-    m_shader->enableAttributeArray(2);
-    m_shader->setAttributeBuffer(2,GL_FLOAT,offsetof(Vertex,TexCoords),sizeof(Vertex));
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size() * sizeof(unsigned int), &this->indices[0], GL_STATIC_DRAW);
+
+    // set the vertex attribute pointers
+    // vertex Positions
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+    // vertex normals
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Normal));
+    // vertex texture coords
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
+    // vertex tangent
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Tangent));
+    // vertex bitangent
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Bitangent));
 
     glBindVertexArray(0);
 }

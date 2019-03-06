@@ -13,15 +13,16 @@
 class Model:protected QOpenGLExtraFunctions
 {
 public:
+    Model();
     Model(QString path);
     void Draw(QOpenGLShaderProgram* shader);
+    void LoadModel(QString path);
 
 private:
     QVector<Mesh> meshes;
     QString directory;
     QVector<Texture> textures_loaded;  //cache loaded texture
 
-    void LoadModel(QString path);
     void processNode(aiNode* node,const aiScene* scene);
     Mesh processMesh(aiMesh* mesh,const aiScene* scene);
     QVector<Texture> loadMaterialTextures(aiMaterial* mat,aiTextureType type,QString typeName);
