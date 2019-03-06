@@ -24,11 +24,11 @@ struct Texture
 {
     GLuint id;
     QString type;  //texture type::diffuse or specular
+    QString path;
 };
 
-class Mesh:public QObject,protected QOpenGLExtraFunctions
+class Mesh:protected QOpenGLExtraFunctions
 {
-    Q_OBJECT
 public:
     QVector<Vertex> vertices;
     QVector<GLuint> indices;

@@ -9,6 +9,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 ECLASS_PATH_DIR = $$dirname(PWD)
 
 INCLUDEPATH += $$PWD/include/
+DEPENDPATH += $$PWD/lib/assimp/x64/
 
 DESTDIR = $$ECLASS_PATH_DIR/OpenGLWithQML/dst
 
@@ -50,3 +51,5 @@ DISTFILES +=
 
 
 LIBS += -lopengl32
+LIBS += -L$$PWD/lib/assimp/ -lassimp-vc140-mt
+#LIBS += "-LG:/AssimpPreBuildLib/Assimp/lib/x64/" -lassimp-vc140-mt
