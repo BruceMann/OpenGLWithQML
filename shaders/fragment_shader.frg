@@ -86,14 +86,14 @@ vec3 CalcDirLight(DirLight light,vec3 normal,vec3 viewDir){
     //合并各个光照分量
     vec3 ambient = light.ambient * vec3(texture(material.diffuse,TexCoord));
     vec3 diffuse = light.diffuse * vec3(texture(material.diffuse,TexCoord));
-    vec3 specular = light.specular*vec3(texture(material.specular,TextCoord));
+    vec3 specular = light.specular*vec3(texture(material.specular,TexCoord));
     return (ambient+diffuse+specular);
 }
 
 vec3 CalcPointLight(PointLight light,vec3 normal,vec3 fragPos,vec3 viewDir){
     vec3 lightDir = normalize(light.position - fragPos);
     //计算漫反射光强
-    float diffuse = max(dot(lightDir,normal),0.0);
+    float diff = max(dot(lightDir,normal),0.0);
     //计算镜面反射
     vec3 reflectDir = reflect(-lightDir,normal);
     float spec = pow(max(dot(reflectDir,viewDir),0.0),material.shininess);
@@ -102,8 +102,8 @@ vec3 CalcPointLight(PointLight light,vec3 normal,vec3 fragPos,vec3 viewDir){
     float attenuation = 1.0/(light.constant+distance*light.linear+distance*distance*light.quadratic);
     //将各个分量合并
     vec3 ambient = light.ambient * vec3(texture(material.diffuse,TexCoord));
-    vec3 diffuse = light.diffuse * vec3(texture(material.diffuse,TexCoord));
-    vec3 specular = light.specular*vec3(texture(material.specular,TextCoord));
+    vec3 diffuse = light.diffuse *diff* vec3(texture(material.diffuse,TexCoord));
+    vec3 specular = light.specular*vec3(texture(material.specular,TexCoord));
     ambient *= attenuation;
     diffuse *= attenuation;
     specular *=attenuation;
