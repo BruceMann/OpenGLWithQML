@@ -161,13 +161,6 @@ void MyWindowRenderer::renderInit()
     genTexture(texture_emissionMap,":/image/matrix.jpg");
 
 
-//    if(!Light_ShaderProgram){
-//        initializeOpenGLFunctions();
-//        Light_ShaderProgram = new QOpenGLShaderProgram();
-//        Light_ShaderProgram->addShaderFromSourceFile(QOpenGLShader::Vertex,":/shaders/color_light.vtx");
-//        Light_ShaderProgram->addShaderFromSourceFile(QOpenGLShader::Fragment,":/shaders/color_light.frg");
-//        Light_ShaderProgram->link();
-//    }
     global_Model.LoadModel("G:/AssimpModel/nanosuit/nanosuit.obj");
 
     if(!loadModel_ShaderProgram){
