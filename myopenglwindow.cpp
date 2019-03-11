@@ -163,14 +163,14 @@ void MyWindowRenderer::renderInit()
 
     global_Model.LoadModel("G:/AssimpModel/nanosuit/nanosuit.obj");
 
-    if(!loadModel_ShaderProgram){
-        initializeOpenGLFunctions();
-        loadModel_ShaderProgram = new QOpenGLShaderProgram();
-        loadModel_ShaderProgram->addShaderFromSourceFile(QOpenGLShader::Vertex,":/shaders/model_loading.vs");
-        loadModel_ShaderProgram->addShaderFromSourceFile(QOpenGLShader::Fragment,":/shaders/model_loading.fs");
-        loadModel_ShaderProgram->link();
-    }
-    loadModel_ShaderProgram->bind();
+//    if(!loadModel_ShaderProgram){
+//        initializeOpenGLFunctions();
+//        loadModel_ShaderProgram = new QOpenGLShaderProgram();
+//        loadModel_ShaderProgram->addShaderFromSourceFile(QOpenGLShader::Vertex,":/shaders/model_loading.vs");
+//        loadModel_ShaderProgram->addShaderFromSourceFile(QOpenGLShader::Fragment,":/shaders/model_loading.fs");
+//        loadModel_ShaderProgram->link();
+//    }
+//    loadModel_ShaderProgram->bind();
 }
 
 void MyWindowRenderer::genTexture(GLuint& texture,const QString& imageFile)
@@ -252,8 +252,8 @@ void MyWindowRenderer::paint()
     glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
     glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
 
-    //m_program->setUniformValue("light.position",lightPos.x,lightPos.y,lightPos.z);
-    m_program->setUniformValue("light.direction",-0.2f,-1.0f,-0.3f);
+//    m_program->setUniformValue("light.position",lightPos.x,lightPos.y,lightPos.z);
+//    m_program->setUniformValue("light.direction",-0.2f,-1.0f,-0.3f);
 //    m_program->setUniformValue("light.ambient",ambientColor.x,ambientColor.y,ambientColor.z);
 //    m_program->setUniformValue("light.diffuse",diffuseColor.x,diffuseColor.y,diffuseColor.z);
     m_program->setUniformValue("light.specular",1.0f,1.0f,1.0f);
@@ -274,8 +274,8 @@ void MyWindowRenderer::paint()
 
     // set material
     m_program->setUniformValue("material.ambient",1.0f,0.5f,0.31f);
-//    m_program->setUniformValue("material.diffuse",1.0f,0.5f,0.31f);
-//    m_program->setUniformValue("material.specular",0.5f,0.5f,0.5f);
+    m_program->setUniformValue("material.diffuse",1.0f,0.5f,0.31f);
+    m_program->setUniformValue("material.specular",0.5f,0.5f,0.5f);
     m_program->setUniformValue("material.shininess",32.0f);  //打错material了 我有毒-，-
     //青色(Cyan)的塑料箱子
 //    m_program->setUniformValue("material.ambient",0.0f, 0.1f, 0.06f);
@@ -299,33 +299,33 @@ void MyWindowRenderer::paint()
     m_program->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
 
 
-    loadModel_ShaderProgram->bind();
-    loadModel_ShaderProgram->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
-    loadModel_ShaderProgram->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
+//    loadModel_ShaderProgram->bind();
+//    loadModel_ShaderProgram->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
+//    loadModel_ShaderProgram->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
 
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
-    model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
-    loadModel_ShaderProgram->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
-    global_Model.Draw(loadModel_ShaderProgram);
+//    glm::mat4 model = glm::mat4(1.0f);
+//    model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
+//    model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
+//    loadModel_ShaderProgram->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
+//    global_Model.Draw(loadModel_ShaderProgram);
 
-//    glBindVertexArray(VAO);
-//    for(GLuint i = 0; i < 10; i++)
-//    {
-//      glm::mat4 model;
-//      model = glm::translate(model, cubePositions[i]);
-//      GLfloat angle = 20.0f * i ;
-//      model = glm::rotate(model, angle, glm::vec3(1.0f, 0.3f, 0.5f));
-//      m_program->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
+    glBindVertexArray(VAO);
+    for(GLuint i = 0; i < 10; i++)
+    {
+      glm::mat4 model;
+      model = glm::translate(model, cubePositions[i]);
+      GLfloat angle = 20.0f * i ;
+      model = glm::rotate(model, angle, glm::vec3(1.0f, 0.3f, 0.5f));
+      m_program->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
 
-//      glDrawArrays(GL_TRIANGLES, 0, 36);
-//    }
+      glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
 //    glm::mat4 model;
 //    model = glm::translate(model,glm::vec3(.0f,.0f,.0f));
 //    m_program->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
 //    glDrawArrays(GL_TRIANGLES,0,36);
 
-//    glBindVertexArray(0);
+    glBindVertexArray(0);
 
 
 
