@@ -33,16 +33,16 @@ MyCamera global_camera(glm::vec3(1.43, 2.6f,  2.3f));
 glm::vec3 lightPos(0.0f,0.0f,0.0f);
 
 glm::vec3 cubePositions[] = {
-  glm::vec3(-8.8f, -2.0f, -2.3f),
-  glm::vec3( 2.0f,  5.0f, -15.0f),
-  glm::vec3(-1.5f, -2.2f, -2.5f),
-  glm::vec3(-3.8f, -2.0f, -12.3f),
-  glm::vec3( 2.4f, -0.4f, -3.5f),
-  glm::vec3(-1.7f,  3.0f, -7.5f),
-  glm::vec3( 1.3f, -2.0f, -2.5f),
-  glm::vec3( 1.5f,  2.0f, -2.5f),
-  glm::vec3( 1.5f,  0.2f, -1.5f),
-  glm::vec3(-1.3f,  1.0f, -1.5f)
+    glm::vec3(-8.8f, -2.0f, -2.3f),
+    glm::vec3( 2.0f,  5.0f, -15.0f),
+    glm::vec3(-1.5f, -2.2f, -2.5f),
+    glm::vec3(-3.8f, -2.0f, -12.3f),
+    glm::vec3( 2.4f, -0.4f, -3.5f),
+    glm::vec3(-1.7f,  3.0f, -7.5f),
+    glm::vec3( 1.3f, -2.0f, -2.5f),
+    glm::vec3( 1.5f,  2.0f, -2.5f),
+    glm::vec3( 1.5f,  0.2f, -1.5f),
+    glm::vec3(-1.3f,  1.0f, -1.5f)
 };
 
 //Deltatime
@@ -78,7 +78,7 @@ MyOpenglWindow::MyOpenglWindow()
 
 void MyOpenglWindow::sync()
 {
-//    qDebug()<<"void MyOpenglWindow::sync()";
+    //    qDebug()<<"void MyOpenglWindow::sync()";
     if(!m_renderer){
         m_renderer = new MyWindowRenderer();
         connect(window(),&QQuickWindow::beforeRendering,m_renderer,&MyWindowRenderer::paint,Qt::DirectConnection);
@@ -113,64 +113,38 @@ MyWindowRenderer::~MyWindowRenderer()
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
-    delete m_program;
+    delete shader;
 }
 
 void MyWindowRenderer::renderInit()
 {
     qDebug()<<"void MyWindowRenderer::renderInit()";
 
-    fgShaderFile = ":/shaders/fragment_shader.frg";
-    vtShaderFile = ":/shaders/vertex_shader.vtx";
+    fgShaderFile = ":/shaders/base2D/base.fg";
+    vtShaderFile = ":/shaders/base2D/base.vt";
 
-    if(!m_program){
-        initializeOpenGLFunctions();
+    if(shader==nullptr){
+        shader = new MyShaderProgram(fgShaderFile,vtShaderFile);
 
-        m_program = new QOpenGLShaderProgram();
-        m_program->addShaderFromSourceFile(QOpenGLShader::Vertex,vtShaderFile);
-        m_program->addShaderFromSourceFile(QOpenGLShader::Fragment,fgShaderFile);
-        m_program->link();
+        glGenVertexArrays(1, &VAO);
+        glGenBuffers(1, &VBO);
+
+        glBindVertexArray(VAO);
+
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(base_vertices), base_vertices, GL_STATIC_DRAW);
+
+        if(!shader->bind()){
+            qDebug()<<"shader program bind error!!!";
+            return;
+        }
+        shader->setAttributeBuffer(0,GL_FLOAT,0,3,0);
+        shader->enableAttributeArray(0);
+
+        glBindVertexArray(0);
+
+        finishInit = true;
     }
-    m_program->bind();
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-//    glGenBuffers(1, &EBO);
-
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-//    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-//    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    m_program->setAttributeBuffer(0,GL_FLOAT,(0 * sizeof(GLfloat)),3,8*sizeof(GLfloat));
-    m_program->enableAttributeArray(0);
-    m_program->setAttributeBuffer(1,GL_FLOAT,(3 * sizeof(GLfloat)),3,8*sizeof(GLfloat));
-    m_program->enableAttributeArray(1);
-    m_program->setAttributeBuffer(2,GL_FLOAT,(6 * sizeof(GLfloat)),2,8*sizeof(GLfloat));
-    m_program->enableAttributeArray(2);
-
-    glBindVertexArray(0);
-
-//    genTexture(texture_mix,":/image/awesomeface.png");
-//    genTexture(texture,":/image/wall.jpg");
-//    genTexture(texture,":/image/woodBox.jpg");
-    genTexture(texture,":/image/container2.png");
-    genTexture(texture_specularMap,":/image/container2_specular.png");
-    genTexture(texture_emissionMap,":/image/matrix.jpg");
-
-
-    global_Model.LoadModel("G:/AssimpModel/nanosuit/nanosuit.obj");
-
-//    if(!loadModel_ShaderProgram){
-//        initializeOpenGLFunctions();
-//        loadModel_ShaderProgram = new QOpenGLShaderProgram();
-//        loadModel_ShaderProgram->addShaderFromSourceFile(QOpenGLShader::Vertex,":/shaders/model_loading.vs");
-//        loadModel_ShaderProgram->addShaderFromSourceFile(QOpenGLShader::Fragment,":/shaders/model_loading.fs");
-//        loadModel_ShaderProgram->link();
-//    }
-//    loadModel_ShaderProgram->bind();
 }
 
 void MyWindowRenderer::genTexture(GLuint& texture,const QString& imageFile)
@@ -201,144 +175,15 @@ void MyWindowRenderer::genTexture(GLuint& texture,const QString& imageFile)
 
 void MyWindowRenderer::paint()
 {
-    double tmp_counter = (double)timeClock.elapsed()*0.001;   //millisecond --> seconds
+    if(!finishInit){
+        qDebug()<<"init error!!!";
+        return;
+    }
 
-//    doMovement();
-    global_camera.doMovement();
-
-    //m_program->bind();   //tmp for load model
-
-    glViewport(0, 0, m_viewportSize.width(), m_viewportSize.height());
-
-//    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_DEPTH_TEST);
-
-//    glClearColor(0.1f, 0.21f, 0.16f, 1.0f);
     glClearColor(0.0f,0.0f,0.0f,1.0f);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
-//    glEnable(GL_BLEND);
-//    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D,texture);
-    m_program->setUniformValue("material.diffuse",0);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D,texture_specularMap);
-    m_program->setUniformValue("material.specular",1);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D,texture_emissionMap);
-    m_program->setUniformValue("material.emission",2);
-
-//    m_program->setUniformValue("ourTexture1",0);
-//    glActiveTexture(GL_TEXTURE1);
-//    glBindTexture(GL_TEXTURE_2D,texture_mix);
-//    m_program->setUniformValue("ourTexture2",1);
-
-//    m_program->setUniformValue("mixValue",float(mixValue));
-
-
-    m_program->setUniformValue("objectColor",1.0f,0.5f,0.31f);
-    m_program->setUniformValue("lightColor",1.0f,1.0f,1.0f);
-    //m_program->setUniformValue("lightPos",lightPos.x,lightPos.y,lightPos.z);
-    m_program->setUniformValue("viewPos",global_camera.Position.x,global_camera.Position.y,global_camera.Position.z);
-
-    // set light
-    glm::vec3 lightColor;
-    lightColor.x = sin(tmp_counter * 2.0f);
-    lightColor.y = sin(tmp_counter * 0.7f);
-    lightColor.z = sin(tmp_counter* 1.3f);
-
-    glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
-    glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
-
-//    m_program->setUniformValue("light.position",lightPos.x,lightPos.y,lightPos.z);
-//    m_program->setUniformValue("light.direction",-0.2f,-1.0f,-0.3f);
-//    m_program->setUniformValue("light.ambient",ambientColor.x,ambientColor.y,ambientColor.z);
-//    m_program->setUniformValue("light.diffuse",diffuseColor.x,diffuseColor.y,diffuseColor.z);
-    m_program->setUniformValue("light.specular",1.0f,1.0f,1.0f);
-    m_program->setUniformValue("light.ambient",0.2f,0.2f,0.2f);
-    m_program->setUniformValue("light.diffuse",0.5f,0.5f,0.5f);
-//    m_program->setUniformValue("light.specular",1.0f,1.0f,1.0f);
-
-    // 设置点光源衰减系数
-//    m_program->setUniformValue("light.constant",1.0f);
-//    m_program->setUniformValue("light.linear",0.09f);
-//    m_program->setUniformValue("light.quadratic",0.032f);
-
-    //设置聚光参数
-    m_program->setUniformValue("light.direction",global_camera.Front.x,global_camera.Front.y,global_camera.Front.z);
-    m_program->setUniformValue("light.position",global_camera.Position.x,global_camera.Position.y,global_camera.Position.z);
-    m_program->setUniformValue("light.cutOff",glm::cos(glm::radians(12.5f)));
-    m_program->setUniformValue("light.outCutOff",glm::cos(glm::radians(15.5f))); //又打错了 吐血啊 outCurOff-->outCutOff;
-
-    // set material
-    m_program->setUniformValue("material.ambient",1.0f,0.5f,0.31f);
-    m_program->setUniformValue("material.diffuse",1.0f,0.5f,0.31f);
-    m_program->setUniformValue("material.specular",0.5f,0.5f,0.5f);
-    m_program->setUniformValue("material.shininess",32.0f);  //打错material了 我有毒-，-
-    //青色(Cyan)的塑料箱子
-//    m_program->setUniformValue("material.ambient",0.0f, 0.1f, 0.06f);
-//    m_program->setUniformValue("material.diffuse", 0.0f, 0.50980392f, 0.50980392f);
-//    m_program->setUniformValue("material.specular",0.50196078f, 0.50196078f, 0.50196078f);
-
-    //Camera/View transformation
-    glm::mat4 view;
-//    GLfloat radius =13.0f;
-//    GLfloat camX = sin(tmp_counter)*radius;
-//    GLfloat camZ = cos(tmp_counter)*radius;
-//    view = glm::lookAt(glm::vec3(camX,0.0f,camZ),glm::vec3(0.0f,0.0f,0.0f),glm::vec3(0.0f,1.0f,0.0f));
-//    view = glm::lookAt(cameraPos,cameraPos+cameraFront,cameraUp);
-    view = global_camera.GetViewMatrix();
-
-    //Projection
-    glm::mat4 projection;
-    projection = glm::perspective(global_camera.Zoom,(GLfloat)m_viewportSize.width()/(GLfloat)m_viewportSize.height(),0.1f,100.0f);
-
-    m_program->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
-    m_program->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
-
-
-//    loadModel_ShaderProgram->bind();
-//    loadModel_ShaderProgram->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
-//    loadModel_ShaderProgram->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
-
-//    glm::mat4 model = glm::mat4(1.0f);
-//    model = glm::translate(model, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
-//    model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));	// it's a bit too big for our scene, so scale it down
-//    loadModel_ShaderProgram->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
-//    global_Model.Draw(loadModel_ShaderProgram);
-
+    shader->bind();
     glBindVertexArray(VAO);
-    for(GLuint i = 0; i < 10; i++)
-    {
-      glm::mat4 model;
-      model = glm::translate(model, cubePositions[i]);
-      GLfloat angle = 20.0f * i ;
-      model = glm::rotate(model, angle, glm::vec3(1.0f, 0.3f, 0.5f));
-      m_program->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
-
-      glDrawArrays(GL_TRIANGLES, 0, 36);
-    }
-//    glm::mat4 model;
-//    model = glm::translate(model,glm::vec3(.0f,.0f,.0f));
-//    m_program->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
-//    glDrawArrays(GL_TRIANGLES,0,36);
-
-    glBindVertexArray(0);
-
-
-
-
-
-
-
-//    m_program->disableAttributeArray(0);
-//    m_program->disableAttributeArray(1);
-
-//    m_program->release();
-
-    // Not strictly needed for this example, but generally useful for when
-    // mixing with raw OpenGL.
-//    m_window->resetOpenGLState();
+    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }

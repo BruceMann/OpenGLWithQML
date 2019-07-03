@@ -6,5 +6,7 @@
         <file>shaders/color_light.vtx</file>
         <file>shaders/model_loading.fs</file>
         <file>shaders/model_loading.vs</file>
+        <file>shaders/base2D/base.fg</file>
+        <file>shaders/base2D/base.vt</file>
     </qresource>
 </RCC>

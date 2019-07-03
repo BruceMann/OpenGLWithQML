@@ -23,7 +23,8 @@ SOURCES += \
     myopenglwindow.cpp \
     mycamera.cpp \
     mesh.cpp \
-    model.cpp
+    model.cpp \
+    myshaderprogram.cpp
 
 RESOURCES += qml.qrc \
     src.qrc \
@@ -45,7 +46,8 @@ HEADERS += \
     vertexdata.h \
     mycamera.h \
     mesh.h \
-    model.h
+    model.h \
+    myshaderprogram.h
 
 DISTFILES +=
 

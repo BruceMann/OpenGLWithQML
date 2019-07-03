@@ -11,12 +11,17 @@
 #include <QTimer>
 #include <QTime>
 
+#include "myshaderprogram.h"
+
 //! [1]
 class MyWindowRenderer:public QObject,protected QOpenGLExtraFunctions
 {
     Q_OBJECT
 public:
-    MyWindowRenderer():m_program(0),counter(0),loadModel_ShaderProgram(0){
+    MyWindowRenderer():
+        counter(0),
+        shader(nullptr){
+        initializeOpenGLFunctions();
         timeClock.start();
         renderInit();
     }
@@ -50,11 +55,13 @@ public slots:
     void paint();
 
 private:
+    bool finishInit;
     QSize m_viewportSize;
-    QOpenGLShaderProgram *m_program;
-    QOpenGLShaderProgram *Light_ShaderProgram;
-    QOpenGLShaderProgram *loadModel_ShaderProgram;
+
+    MyShaderProgram* shader;
+
     QQuickWindow *m_window;
+
 };
 //! [1]
 
