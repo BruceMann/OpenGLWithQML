@@ -1,10 +1,19 @@
 #version 330 core
+
+uniform float iTime;
 varying vec2 coord;
+
+#define PI 3.1415926
 
 void main(){
     vec2 st = coord;
+    float t = abs(sin(iTime*2.0*PI));
     vec3 color = vec3(0.0);
     st = (st+1.0)*0.5;
-    color = vec3(st.x,st.y,1.0);
-    gl_FragColor = vec4(color.x,color.y,.0,1.0f);
+
+    st*=1.0;
+    vec2 f = fract(st);
+
+    color = vec3(f.x,t*f.y,0.0);
+    gl_FragColor = vec4(color.x,color.y,0.0,1.0f);
 }

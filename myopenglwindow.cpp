@@ -73,7 +73,6 @@ MyOpenglWindow::MyOpenglWindow()
     global_camera.Yaw = -111.3f;
 
     this->installEventFilter(&global_camera);
-
 }
 
 void MyOpenglWindow::sync()
@@ -179,11 +178,13 @@ void MyWindowRenderer::paint()
         qDebug()<<"init error!!!";
         return;
     }
+    //qDebug()<<timeClock.elapsed();
 
     glClearColor(0.0f,0.0f,0.0f,1.0f);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
     shader->bind();
+    shader->setUniformValue("iTime",(float)(timeClock.elapsed()/1000.0f));
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
