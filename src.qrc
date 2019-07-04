@@ -8,5 +8,7 @@
         <file>shaders/model_loading.vs</file>
         <file>shaders/base2D/base.fg</file>
         <file>shaders/base2D/base.vt</file>
+        <file>shaders/lighting/lamp.fg</file>
+        <file>shaders/lighting/lamp.vt</file>
     </qresource>
 </RCC>

@@ -77,7 +77,7 @@ MyOpenglWindow::MyOpenglWindow()
 
 void MyOpenglWindow::sync()
 {
-    //    qDebug()<<"void MyOpenglWindow::sync()";
+     //qDebug()<<"void MyOpenglWindow::sync()"<<QTime::currentTime().msec();
     if(!m_renderer){
         m_renderer = new MyWindowRenderer();
         connect(window(),&QQuickWindow::beforeRendering,m_renderer,&MyWindowRenderer::paint,Qt::DirectConnection);
@@ -121,6 +121,8 @@ void MyWindowRenderer::renderInit()
 
     fgShaderFile = ":/shaders/base2D/base.fg";
     vtShaderFile = ":/shaders/base2D/base.vt";
+//    fgShaderFile = ":/shaders/lighting/lamp.fg";
+//    vtShaderFile = ":/shaders/lighting/lamp.vt";
 
     if(shader==nullptr){
         shader = new MyShaderProgram(fgShaderFile,vtShaderFile);
@@ -174,11 +176,11 @@ void MyWindowRenderer::genTexture(GLuint& texture,const QString& imageFile)
 
 void MyWindowRenderer::paint()
 {
+    qDebug()<<"painting"<<QTime::currentTime().msec();
     if(!finishInit){
         qDebug()<<"init error!!!";
         return;
     }
-    //qDebug()<<timeClock.elapsed();
 
     glClearColor(0.0f,0.0f,0.0f,1.0f);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -186,5 +188,5 @@ void MyWindowRenderer::paint()
     shader->bind();
     shader->setUniformValue("iTime",(float)(timeClock.elapsed()/1000.0f));
     glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+    glDrawArrays(GL_POLYGON, 0, 4);
 }

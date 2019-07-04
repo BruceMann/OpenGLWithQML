@@ -11,9 +11,9 @@ void main(){
     vec3 color = vec3(0.0);
     st = (st+1.0)*0.5;
 
-    st*=1.0;
+    st*= 1.0;
     vec2 f = fract(st);
 
-    color = vec3(f.x,t*f.y,0.0);
+    color = vec3(f.x,f.y,0.0);
     gl_FragColor = vec4(color.x,color.y,0.0,1.0f);
 }

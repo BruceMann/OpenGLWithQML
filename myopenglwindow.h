@@ -59,6 +59,7 @@ private:
     QSize m_viewportSize;
 
     MyShaderProgram* shader;
+    MyShaderProgram* lampShader;
 
     QQuickWindow *m_window;
 
@@ -70,6 +71,8 @@ class MyOpenglWindow:public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(qreal mixValue READ mixValue WRITE setmixValue NOTIFY mixValueChanged)
+    Q_PROPERTY(QString fragmentShader WRITE setFragmentShader)
+    Q_PROPERTY(QString vertexShader WRITE setVertexShader)
 
 public:
     MyOpenglWindow();
@@ -81,6 +84,9 @@ public:
         if (window())
             window()->update();
     }
+
+    void setFragmentShader(QString fgShader){m_frgshaderFile = fgShader;}
+    void setVertexShader(QString vtShader){m_vtshaderFile = vtShader;}
 
     QTimer* updateTimer;
     int updateCount;
@@ -99,6 +105,10 @@ private slots:
 
 private:
     qreal m_mixValue;
+
+    QString m_frgshaderFile;
+    QString m_vtshaderFile;
+
     MyWindowRenderer* m_renderer;
 };
 //! [2]
