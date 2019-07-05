@@ -117,6 +117,7 @@ MyWindowRenderer::~MyWindowRenderer()
 
 GLuint cubeVAO,cubeVBO,cubeTex;
 GLuint planeVAO,planeVBO,planeTex;
+MyShaderProgram* singleColorShader = nullptr;
 void MyWindowRenderer::renderInit()
 {
     qDebug()<<"void MyWindowRenderer::renderInit()";
@@ -126,7 +127,8 @@ void MyWindowRenderer::renderInit()
     fgShaderFile = ":/shaders/depth_testing/depth_testing.fg";
     vtShaderFile = ":/shaders/depth_testing/depth_testing.vt";
 
-    cubeShader = new MyShaderProgram(":/shaders/depth_testing/depth_testing.fg",":/shaders/depth_testing/depth_testing.vt");
+    cubeShader = new MyShaderProgram(":/shaders/depth_testing/depth_testing.fg",":/shaders/stencil_test/stencil_test.vt");
+    singleColorShader = new MyShaderProgram(":/shaders/stencil_test/stencil_test_border.fg",":/shaders/stencil_test/stencil_test.vt");
 
     //cubeVAO
     glGenVertexArrays(1,&cubeVAO);
@@ -134,10 +136,10 @@ void MyWindowRenderer::renderInit()
     glBindVertexArray(cubeVAO);
     glBindBuffer(GL_ARRAY_BUFFER,cubeVBO);
     glBufferData(GL_ARRAY_BUFFER,sizeof(cubeVertices),cubeVertices,GL_STATIC_DRAW);
-    cubeShader->setAttributeBuffer(0,GL_FLOAT,(0 * sizeof(GLfloat)),3,5*sizeof(GLfloat));
-    cubeShader->enableAttributeArray(0);
-    cubeShader->setAttributeBuffer(1,GL_FLOAT,(3 * sizeof(GLfloat)),2,5*sizeof(GLfloat));
-    cubeShader->enableAttributeArray(1);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glBindVertexArray(0);
     //plane VAO
     glGenVertexArrays(1,&planeVAO);
@@ -156,8 +158,6 @@ void MyWindowRenderer::renderInit()
     genTexture(planeTex,":/image/metal.png");
 
     finishInit = true;
-
-
 }
 
 void MyWindowRenderer::genTexture(GLuint& texture,const QString& imageFile)
@@ -193,27 +193,50 @@ void MyWindowRenderer::paint()
         qDebug()<<"init error!!!";
         return;
     }
-    cubeShader->bind();
+
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glEnable(GL_STENCIL_TEST);
+    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
     global_camera.doMovement();
     glViewport(0,0,m_viewportSize.width(), m_viewportSize.height());
-    glEnable(GL_DEPTH_TEST);
+
     glClearColor(0.0f,0.0f,0.0f,1.0f);
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
 
     glActiveTexture(GL_TEXTURE0);
-
-    cubeShader->setUniformValue("texture1",0);
 
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 view = global_camera.GetViewMatrix();
     glm::mat4 projection = glm::perspective(global_camera.Zoom,(GLfloat)m_viewportSize.width()/(GLfloat)m_viewportSize.height(),0.1f,100.0f);
 
+
+    singleColorShader->bind();
+    singleColorShader->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
+    singleColorShader->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
+
+    cubeShader->bind();
+    cubeShader->setUniformValue("texture1",0);
     cubeShader->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
     cubeShader->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
 
+    //plane
+    glStencilMask(0x00);
+    glBindVertexArray(planeVAO);
+    glBindTexture(GL_TEXTURE_2D,planeTex);
+    model = glm::mat4(1.0);
+    cubeShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+
     //cube
+    glStencilFunc(GL_ALWAYS,1,0xFF);
+    glStencilMask(0xFF); //enable write to the stencil buffer
+
     glBindVertexArray(cubeVAO);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D,cubeTex);
     model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
     cubeShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
@@ -224,12 +247,26 @@ void MyWindowRenderer::paint()
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
 
-    //plane
-    glBindVertexArray(planeVAO);
-    glBindTexture(GL_TEXTURE_2D,planeTex);
-    model = glm::mat4(1.0);
-    cubeShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    glBindVertexArray(0);
+    //2nd render pass
+    glStencilFunc(GL_NOTEQUAL,1,0xFF);
+    glStencilMask(0x00);
+    glDisable(GL_DEPTH_TEST);
 
+    GLfloat scale = 1.1f;
+    singleColorShader->bind();
+    glBindVertexArray(cubeVAO);
+    glBindTexture(GL_TEXTURE_2D, cubeTex);
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+    model = glm::scale(model,glm::vec3(scale,scale,scale));
+    singleColorShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+    model = glm::scale(model, glm::vec3(scale, scale, scale));
+    singleColorShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glBindVertexArray(0);
+    glStencilMask(0xFF);
+    glEnable(GL_DEPTH_TEST);
 }

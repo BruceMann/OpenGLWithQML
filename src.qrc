@@ -12,5 +12,8 @@
         <file>shaders/lighting/lamp.vt</file>
         <file>shaders/depth_testing/depth_testing.fg</file>
         <file>shaders/depth_testing/depth_testing.vt</file>
+        <file>shaders/stencil_test/stencil_test.fg</file>
+        <file>shaders/stencil_test/stencil_test.vt</file>
+        <file>shaders/stencil_test/stencil_test_border.fg</file>
     </qresource>
 </RCC>
