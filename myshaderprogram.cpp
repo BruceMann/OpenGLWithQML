@@ -17,7 +17,7 @@ MyShaderProgram::MyShaderProgram(QString fragmentPath, QString vertexPath)
         errorMsg = log();
         qDebug()<<errorMsg;
     }
-    // bind(); //编译 链接成功后手动执行绑定 glUseProgram
+     bind(); //编译 链接成功后手动执行绑定 glUseProgram
 }
 
 MyShaderProgram::~MyShaderProgram()

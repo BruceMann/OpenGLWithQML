@@ -77,7 +77,7 @@ MyOpenglWindow::MyOpenglWindow()
 
 void MyOpenglWindow::sync()
 {
-     //qDebug()<<"void MyOpenglWindow::sync()"<<QTime::currentTime().msec();
+    //qDebug()<<"void MyOpenglWindow::sync()"<<QTime::currentTime().msec();
     if(!m_renderer){
         m_renderer = new MyWindowRenderer();
         connect(window(),&QQuickWindow::beforeRendering,m_renderer,&MyWindowRenderer::paint,Qt::DirectConnection);
@@ -116,34 +116,47 @@ MyWindowRenderer::~MyWindowRenderer()
 }
 
 GLuint cubeVAO,cubeVBO,cubeTex;
-
+GLuint planeVAO,planeVBO,planeTex;
 void MyWindowRenderer::renderInit()
 {
     qDebug()<<"void MyWindowRenderer::renderInit()";
 
-    fgShaderFile = ":/shaders/base2D/base.fg";
-    vtShaderFile = ":/shaders/base2D/base.vt";
-//    fgShaderFile = ":/shaders/lighting/lamp.fg";
-//    vtShaderFile = ":/shaders/lighting/lamp.vt";
+    //    fgShaderFile = ":/shaders/base2D/base.fg";
+    //    vtShaderFile = ":/shaders/base2D/base.vt";
+    fgShaderFile = ":/shaders/depth_testing/depth_testing.fg";
+    vtShaderFile = ":/shaders/depth_testing/depth_testing.vt";
 
-    if(cubeShader==nullptr){
-        cubeShader = new MyShaderProgram(":/shaders/depth_testing/depth_testing.fg",":/shaders/depth_testing/depth_testing.vt");
-        glGenVertexArrays(1,&cubeVAO);
-        glGenBuffers(1,&cubeVBO);
-        glBindVertexArray(cubeVAO);
-        glBindBuffer(GL_ARRAY_BUFFER,cubeVBO);
-        glBufferData(GL_ARRAY_BUFFER,sizeof(cubeVertices),cubeVertices,GL_STATIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,5*sizeof(float),(void*)0);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,5*sizeof(float),(void*)(3*sizeof(float)));
-        glBindVertexArray(0);
+    cubeShader = new MyShaderProgram(":/shaders/depth_testing/depth_testing.fg",":/shaders/depth_testing/depth_testing.vt");
 
-        genTexture(cubeTex,":/image/woodBox.jpg");
-        cubeShader->bind();
-        cubeShader->setUniformValue("texture1",cubeTex);
-        finishInit = true;
-    }
+    //cubeVAO
+    glGenVertexArrays(1,&cubeVAO);
+    glGenBuffers(1,&cubeVBO);
+    glBindVertexArray(cubeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER,cubeVBO);
+    glBufferData(GL_ARRAY_BUFFER,sizeof(cubeVertices),cubeVertices,GL_STATIC_DRAW);
+    cubeShader->setAttributeBuffer(0,GL_FLOAT,(0 * sizeof(GLfloat)),3,5*sizeof(GLfloat));
+    cubeShader->enableAttributeArray(0);
+    cubeShader->setAttributeBuffer(1,GL_FLOAT,(3 * sizeof(GLfloat)),2,5*sizeof(GLfloat));
+    cubeShader->enableAttributeArray(1);
+    glBindVertexArray(0);
+    //plane VAO
+    glGenVertexArrays(1,&planeVAO);
+    glGenBuffers(1,&planeVBO);
+    glBindVertexArray(planeVAO);
+    glBindBuffer(GL_ARRAY_BUFFER,planeVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), &planeVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glBindVertexArray(0);
+
+
+    genTexture(cubeTex,":/image/marble.jpg");
+    genTexture(planeTex,":/image/metal.png");
+
+    finishInit = true;
+
 
 }
 
@@ -159,7 +172,7 @@ void MyWindowRenderer::genTexture(GLuint& texture,const QString& imageFile)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     QImage tex_image(imageFile);
-    tex_image = tex_image.convertToFormat(QImage::Format_RGB888);
+    tex_image = tex_image.convertToFormat(QImage::Format_RGBA8888);
 
     int width,height;
     imageBits =  tex_image.bits();
@@ -168,7 +181,7 @@ void MyWindowRenderer::genTexture(GLuint& texture,const QString& imageFile)
 
     qDebug()<<width<<height<<imageBits;
 
-    glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,width,height,0,GL_RGB,GL_UNSIGNED_BYTE,imageBits);
+    glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width,height,0,GL_RGBA,GL_UNSIGNED_BYTE,imageBits);
     glGenerateMipmap(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture when done, so we won't accidentily mess up our texture.
 }
@@ -180,17 +193,43 @@ void MyWindowRenderer::paint()
         qDebug()<<"init error!!!";
         return;
     }
+    cubeShader->bind();
 
+    global_camera.doMovement();
+    glViewport(0,0,m_viewportSize.width(), m_viewportSize.height());
+    glEnable(GL_DEPTH_TEST);
     glClearColor(0.0f,0.0f,0.0f,1.0f);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-    glViewport(0,0,m_window->width(),m_window->height());
 
-    cubeShader->bind();
+    glActiveTexture(GL_TEXTURE0);
+
+    cubeShader->setUniformValue("texture1",0);
+
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 view = global_camera.GetViewMatrix();
-    glm::mat4 projection = glm::perspective(glm::radians(global_camera.Zoom), (float)m_viewportSize.width() / (float)m_viewportSize.height(), 0.1f, 100.0f);
-    cubeShader->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
+    glm::mat4 projection = glm::perspective(global_camera.Zoom,(GLfloat)m_viewportSize.width()/(GLfloat)m_viewportSize.height(),0.1f,100.0f);
+
     cubeShader->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
-    cubeShader->setUniformValue("proejction",QMatrix4x4(glm::value_ptr(projection)).transposed());
-    glDrawArrays(GL_TRIANGLES,0,36);
+    cubeShader->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
+
+    //cube
+    glBindVertexArray(cubeVAO);
+    glBindTexture(GL_TEXTURE_2D,cubeTex);
+    model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+    cubeShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+    cubeShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glBindVertexArray(0);
+
+    //plane
+    glBindVertexArray(planeVAO);
+    glBindTexture(GL_TEXTURE_2D,planeTex);
+    model = glm::mat4(1.0);
+    cubeShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+
 }
