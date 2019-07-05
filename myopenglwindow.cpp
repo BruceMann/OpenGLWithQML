@@ -49,6 +49,8 @@ glm::vec3 cubePositions[] = {
 GLfloat deltaTime = 0.0f;   //Time between current frame and last frame
 GLfloat lastFrame = 0.0f;   //Time of last frame
 
+
+
 MyOpenglWindow::MyOpenglWindow()
     :m_renderer(nullptr)
 {
@@ -118,6 +120,10 @@ MyWindowRenderer::~MyWindowRenderer()
 GLuint cubeVAO,cubeVBO,cubeTex;
 GLuint planeVAO,planeVBO,planeTex;
 MyShaderProgram* singleColorShader = nullptr;
+
+GLuint quadVAO,quadVBO,quadTex;
+MyShaderProgram* framebufferShader = nullptr;
+    GLuint framebuffer;
 void MyWindowRenderer::renderInit()
 {
     qDebug()<<"void MyWindowRenderer::renderInit()";
@@ -129,6 +135,7 @@ void MyWindowRenderer::renderInit()
 
     cubeShader = new MyShaderProgram(":/shaders/depth_testing/depth_testing.fg",":/shaders/stencil_test/stencil_test.vt");
     singleColorShader = new MyShaderProgram(":/shaders/stencil_test/stencil_test_border.fg",":/shaders/stencil_test/stencil_test.vt");
+    framebufferShader = new MyShaderProgram(":/shaders/framebuffer/framebuffer_screen.fg",":/shaders/framebuffer/framebuffer_screen.vt");
 
     //cubeVAO
     glGenVertexArrays(1,&cubeVAO);
@@ -152,10 +159,43 @@ void MyWindowRenderer::renderInit()
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glBindVertexArray(0);
-
+    //screen quad VAO
+    glGenVertexArrays(1,&quadVAO);
+    glGenBuffers(1,&quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER,quadVBO);
+    glBufferData(GL_ARRAY_BUFFER,sizeof(quadVertices),&quadVertices,GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,4*sizeof(float),(void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,4*sizeof(float),(void*)(2*sizeof(float)));
 
     genTexture(cubeTex,":/image/marble.jpg");
     genTexture(planeTex,":/image/metal.png");
+    framebufferShader->bind();
+    framebufferShader->setUniformValue("screenTexture",0);
+
+    //framebuffer configuration
+
+    glGenFramebuffers(1,&framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER,framebuffer);
+    //create a color attachment texture
+    GLuint textureColorbuffer;
+    glGenTextures(1,&textureColorbuffer);
+    glBindTexture(GL_TEXTURE_2D,textureColorbuffer);
+    glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,m_window->width(),m_window->height(),0,GL_RGB,GL_UNSIGNED_BYTE,NULL);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,textureColorbuffer,0);
+    //create a renderbuffer object for depth and stencil attachment
+    GLuint rbo;
+    glGenRenderbuffers(1,&rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER,rbo);
+    glRenderbufferStorage(GL_RENDERBUFFER,GL_DEPTH24_STENCIL8,m_window->width(),m_window->height());
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER,GL_DEPTH_STENCIL_ATTACHMENT,GL_RENDERBUFFER,rbo);
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER)!=GL_FRAMEBUFFER_COMPLETE)
+        qDebug()<<"error :: framebuffer is not complete!";
+    glBindFramebuffer(GL_FRAMEBUFFER,0);
 
     finishInit = true;
 }
@@ -193,6 +233,12 @@ void MyWindowRenderer::paint()
         qDebug()<<"init error!!!";
         return;
     }
+    global_camera.doMovement();
+    glViewport(0,0,m_viewportSize.width(), m_viewportSize.height());
+
+    //render
+    glBindFramebuffer(GL_FRAMEBUFFER,framebuffer);
+
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -200,8 +246,6 @@ void MyWindowRenderer::paint()
     glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
     glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
-    global_camera.doMovement();
-    glViewport(0,0,m_viewportSize.width(), m_viewportSize.height());
 
     glClearColor(0.0f,0.0f,0.0f,1.0f);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
@@ -269,4 +313,12 @@ void MyWindowRenderer::paint()
     glBindVertexArray(0);
     glStencilMask(0xFF);
     glEnable(GL_DEPTH_TEST);
+
+    glBindFramebuffer(GL_FRAMEBUFFER,0);
+    glDisable(GL_DEPTH_TEST);
+    glClear(GL_COLOR_BUFFER_BIT);
+    framebufferShader->bind();
+    glBindVertexArray(quadVAO);
+    glBindTexture(GL_TEXTURE_2D,quadTex);
+    glDrawArrays(GL_TRIANGLES,0,6);
 }

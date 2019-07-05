@@ -15,5 +15,7 @@
         <file>shaders/stencil_test/stencil_test.fg</file>
         <file>shaders/stencil_test/stencil_test.vt</file>
         <file>shaders/stencil_test/stencil_test_border.fg</file>
+        <file>shaders/framebuffer/framebuffer_screen.fg</file>
+        <file>shaders/framebuffer/framebuffer_screen.vt</file>
     </qresource>
 </RCC>
