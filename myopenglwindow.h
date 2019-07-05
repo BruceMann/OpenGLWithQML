@@ -20,7 +20,9 @@ class MyWindowRenderer:public QObject,protected QOpenGLExtraFunctions
 public:
     MyWindowRenderer():
         counter(0),
-        shader(nullptr){
+        shader(nullptr),
+        cubeShader(nullptr)
+    {
         initializeOpenGLFunctions();
         timeClock.start();
         renderInit();
@@ -60,6 +62,7 @@ private:
 
     MyShaderProgram* shader;
     MyShaderProgram* lampShader;
+    MyShaderProgram* cubeShader;
 
     QQuickWindow *m_window;
 

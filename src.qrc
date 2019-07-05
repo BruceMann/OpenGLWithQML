@@ -10,5 +10,7 @@
         <file>shaders/base2D/base.vt</file>
         <file>shaders/lighting/lamp.fg</file>
         <file>shaders/lighting/lamp.vt</file>
+        <file>shaders/depth_testing/depth_testing.fg</file>
+        <file>shaders/depth_testing/depth_testing.vt</file>
     </qresource>
 </RCC>

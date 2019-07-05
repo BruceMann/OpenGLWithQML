@@ -115,6 +115,8 @@ MyWindowRenderer::~MyWindowRenderer()
     delete shader;
 }
 
+GLuint cubeVAO,cubeVBO,cubeTex;
+
 void MyWindowRenderer::renderInit()
 {
     qDebug()<<"void MyWindowRenderer::renderInit()";
@@ -124,28 +126,25 @@ void MyWindowRenderer::renderInit()
 //    fgShaderFile = ":/shaders/lighting/lamp.fg";
 //    vtShaderFile = ":/shaders/lighting/lamp.vt";
 
-    if(shader==nullptr){
-        shader = new MyShaderProgram(fgShaderFile,vtShaderFile);
-
-        glGenVertexArrays(1, &VAO);
-        glGenBuffers(1, &VBO);
-
-        glBindVertexArray(VAO);
-
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(base_vertices), base_vertices, GL_STATIC_DRAW);
-
-        if(!shader->bind()){
-            qDebug()<<"shader program bind error!!!";
-            return;
-        }
-        shader->setAttributeBuffer(0,GL_FLOAT,0,3,0);
-        shader->enableAttributeArray(0);
-
+    if(cubeShader==nullptr){
+        cubeShader = new MyShaderProgram(":/shaders/depth_testing/depth_testing.fg",":/shaders/depth_testing/depth_testing.vt");
+        glGenVertexArrays(1,&cubeVAO);
+        glGenBuffers(1,&cubeVBO);
+        glBindVertexArray(cubeVAO);
+        glBindBuffer(GL_ARRAY_BUFFER,cubeVBO);
+        glBufferData(GL_ARRAY_BUFFER,sizeof(cubeVertices),cubeVertices,GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,5*sizeof(float),(void*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,5*sizeof(float),(void*)(3*sizeof(float)));
         glBindVertexArray(0);
 
+        genTexture(cubeTex,":/image/woodBox.jpg");
+        cubeShader->bind();
+        cubeShader->setUniformValue("texture1",cubeTex);
         finishInit = true;
     }
+
 }
 
 void MyWindowRenderer::genTexture(GLuint& texture,const QString& imageFile)
@@ -176,7 +175,7 @@ void MyWindowRenderer::genTexture(GLuint& texture,const QString& imageFile)
 
 void MyWindowRenderer::paint()
 {
-    qDebug()<<"painting"<<QTime::currentTime().msec();
+    //qDebug()<<"painting"<<QTime::currentTime().msec();
     if(!finishInit){
         qDebug()<<"init error!!!";
         return;
@@ -184,9 +183,14 @@ void MyWindowRenderer::paint()
 
     glClearColor(0.0f,0.0f,0.0f,1.0f);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    glViewport(0,0,m_window->width(),m_window->height());
 
-    shader->bind();
-    shader->setUniformValue("iTime",(float)(timeClock.elapsed()/1000.0f));
-    glBindVertexArray(VAO);
-    glDrawArrays(GL_POLYGON, 0, 4);
+    cubeShader->bind();
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 view = global_camera.GetViewMatrix();
+    glm::mat4 projection = glm::perspective(glm::radians(global_camera.Zoom), (float)m_viewportSize.width() / (float)m_viewportSize.height(), 0.1f, 100.0f);
+    cubeShader->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
+    cubeShader->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
+    cubeShader->setUniformValue("proejction",QMatrix4x4(glm::value_ptr(projection)).transposed());
+    glDrawArrays(GL_TRIANGLES,0,36);
 }
