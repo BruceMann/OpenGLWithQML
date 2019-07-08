@@ -117,13 +117,43 @@ MyWindowRenderer::~MyWindowRenderer()
     delete shader;
 }
 
+void MyWindowRenderer::genTexture(GLuint& texture,const QString& imageFile)
+{
+    glGenTextures(1,&texture);
+    glBindTexture(GL_TEXTURE_2D,texture);
+    // Set the texture wrapping parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// Set texture wrapping to GL_REPEAT (usually basic wrapping method)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // Set texture filtering parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    QImage tex_image(imageFile);
+    tex_image = tex_image.convertToFormat(QImage::Format_RGBA8888);
+
+    int width,height;
+    imageBits =  tex_image.bits();
+    width = tex_image.width();
+    height = tex_image.height();
+
+    qDebug()<<width<<height<<imageBits;
+
+    glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width,height,0,GL_RGBA,GL_UNSIGNED_BYTE,imageBits);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture when done, so we won't accidentily mess up our texture.
+}
+
+
+
 GLuint cubeVAO,cubeVBO,cubeTex;
 GLuint planeVAO,planeVBO,planeTex;
 MyShaderProgram* singleColorShader = nullptr;
 
 GLuint quadVAO,quadVBO,quadTex;
 MyShaderProgram* framebufferShader = nullptr;
-    GLuint framebuffer;
+GLuint framebuffer;
+GLuint textureColorbuffer;
+ GLuint rbo;
 void MyWindowRenderer::renderInit()
 {
     qDebug()<<"void MyWindowRenderer::renderInit()";
@@ -152,7 +182,7 @@ void MyWindowRenderer::renderInit()
     glGenVertexArrays(1,&planeVAO);
     glGenBuffers(1,&planeVBO);
     glBindVertexArray(planeVAO);
-    glBindBuffer(GL_ARRAY_BUFFER,planeVBO);
+    glBindBuffer (GL_ARRAY_BUFFER,planeVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), &planeVertices, GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
@@ -172,58 +202,32 @@ void MyWindowRenderer::renderInit()
 
     genTexture(cubeTex,":/image/marble.jpg");
     genTexture(planeTex,":/image/metal.png");
+
     framebufferShader->bind();
     framebufferShader->setUniformValue("screenTexture",0);
-
     //framebuffer configuration
 
     glGenFramebuffers(1,&framebuffer);
     glBindFramebuffer(GL_FRAMEBUFFER,framebuffer);
     //create a color attachment texture
-    GLuint textureColorbuffer;
+
     glGenTextures(1,&textureColorbuffer);
     glBindTexture(GL_TEXTURE_2D,textureColorbuffer);
-    glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,m_window->width(),m_window->height(),0,GL_RGB,GL_UNSIGNED_BYTE,NULL);
+    glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,800,800,0,GL_RGB,GL_UNSIGNED_BYTE,NULL);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,textureColorbuffer,0);
     //create a renderbuffer object for depth and stencil attachment
-    GLuint rbo;
+
     glGenRenderbuffers(1,&rbo);
     glBindRenderbuffer(GL_RENDERBUFFER,rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER,GL_DEPTH24_STENCIL8,m_window->width(),m_window->height());
+    glRenderbufferStorage(GL_RENDERBUFFER,GL_DEPTH24_STENCIL8,800,800);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER,GL_DEPTH_STENCIL_ATTACHMENT,GL_RENDERBUFFER,rbo);
     if(glCheckFramebufferStatus(GL_FRAMEBUFFER)!=GL_FRAMEBUFFER_COMPLETE)
         qDebug()<<"error :: framebuffer is not complete!";
     glBindFramebuffer(GL_FRAMEBUFFER,0);
 
     finishInit = true;
-}
-
-void MyWindowRenderer::genTexture(GLuint& texture,const QString& imageFile)
-{
-    glGenTextures(1,&texture);
-    glBindTexture(GL_TEXTURE_2D,texture);
-    // Set the texture wrapping parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// Set texture wrapping to GL_REPEAT (usually basic wrapping method)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    // Set texture filtering parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    QImage tex_image(imageFile);
-    tex_image = tex_image.convertToFormat(QImage::Format_RGBA8888);
-
-    int width,height;
-    imageBits =  tex_image.bits();
-    width = tex_image.width();
-    height = tex_image.height();
-
-    qDebug()<<width<<height<<imageBits;
-
-    glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width,height,0,GL_RGBA,GL_UNSIGNED_BYTE,imageBits);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture when done, so we won't accidentily mess up our texture.
 }
 
 void MyWindowRenderer::paint()
@@ -319,6 +323,6 @@ void MyWindowRenderer::paint()
     glClear(GL_COLOR_BUFFER_BIT);
     framebufferShader->bind();
     glBindVertexArray(quadVAO);
-    glBindTexture(GL_TEXTURE_2D,quadTex);
+    glBindTexture(GL_TEXTURE_2D,textureColorbuffer);
     glDrawArrays(GL_TRIANGLES,0,6);
 }
