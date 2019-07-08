@@ -193,6 +193,9 @@ QVector<QString> faces{
 GLuint skyboxVAO,skyboxVBO,cubemapTexture;
 MyShaderProgram* skyboxShader = nullptr;
 
+MyShaderProgram* environmentMapShader = nullptr;
+GLuint normalCubeVAO,normalCubeVBO;
+
 void MyWindowRenderer::renderInit()
 {
     qDebug()<<"void MyWindowRenderer::renderInit()";
@@ -206,7 +209,7 @@ void MyWindowRenderer::renderInit()
     singleColorShader = new MyShaderProgram(":/shaders/stencil_test/stencil_test_border.fg",":/shaders/stencil_test/stencil_test.vt");
     framebufferShader = new MyShaderProgram(":/shaders/framebuffer/framebuffer_screen.fg",":/shaders/framebuffer/framebuffer_screen.vt");
     skyboxShader = new MyShaderProgram(":/shaders/skybox/skybox.fg",":/shaders/skybox/skybox.vt");
-
+    environmentMapShader = new MyShaderProgram(":/shaders/environment_mapping/environment_map.fg",":/shaders/environment_mapping/environment_map.vt");
     //cubeVAO
     glGenVertexArrays(1,&cubeVAO);
     glGenBuffers(1,&cubeVBO);
@@ -217,6 +220,17 @@ void MyWindowRenderer::renderInit()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glBindVertexArray(0);
+    //cube_normal VAO
+    glGenVertexArrays(1,&normalCubeVAO);
+    glBindVertexArray(normalCubeVAO);
+    glGenBuffers(1,&normalCubeVBO);
+    glBindBuffer(GL_ARRAY_BUFFER,normalCubeVBO);
+    glBufferData(GL_ARRAY_BUFFER,sizeof(cubeVertices_normal),cubeVertices_normal,GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,sizeof(float)*6,(void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,sizeof(float)*6,(void*)(3*sizeof(float)));
     glBindVertexArray(0);
     //plane VAO
     glGenVertexArrays(1,&planeVAO);
@@ -255,7 +269,8 @@ void MyWindowRenderer::renderInit()
     cubemapTexture = loadCubemap(faces);
     skyboxShader->bind();
     skyboxShader->setUniformValue("skybox",0);
-
+    environmentMapShader->bind();
+    environmentMapShader->setUniformValue("skybox",0);
 
     framebufferShader->bind();
     framebufferShader->setUniformValue("screenTexture",0);
@@ -338,9 +353,19 @@ void MyWindowRenderer::paint()
     model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
     cubeShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
     glDrawArrays(GL_TRIANGLES, 0, 36);
+
+    //cube 2 use environment mapping texture
+    environmentMapShader->bind();
+    glBindVertexArray(normalCubeVAO);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP,cubemapTexture);
+    glm::vec3 cameraPos = global_camera.Position;
+    environmentMapShader->setUniformValue("cameraPos",QVector3D(cameraPos.x,cameraPos.y,cameraPos.z));
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-    cubeShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
+    environmentMapShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
+    environmentMapShader->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
+    environmentMapShader->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
 

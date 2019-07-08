@@ -19,5 +19,7 @@
         <file>shaders/framebuffer/framebuffer_screen.vt</file>
         <file>shaders/skybox/skybox.fg</file>
         <file>shaders/skybox/skybox.vt</file>
+        <file>shaders/environment_mapping/environment_map.fg</file>
+        <file>shaders/environment_mapping/environment_map.vt</file>
     </qresource>
 </RCC>
