@@ -200,7 +200,8 @@ void MyWindowRenderer::renderInit()
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,4*sizeof(float),(void*)(2*sizeof(float)));
 
-    genTexture(cubeTex,":/image/marble.jpg");
+//    genTexture(cubeTex,":/image/marble.jpg");
+    genTexture(cubeTex,":/image/woodBox.jpg");
     genTexture(planeTex,":/image/metal.png");
 
     framebufferShader->bind();
