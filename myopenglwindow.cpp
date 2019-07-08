@@ -143,7 +143,34 @@ void MyWindowRenderer::genTexture(GLuint& texture,const QString& imageFile)
     glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture when done, so we won't accidentily mess up our texture.
 }
 
+GLuint loadCubemap(QVector<QString>& faces){
+    GLuint textureID;
+    glGenTextures(1,&textureID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP,textureID);
+    for(GLuint i=0;i<faces.size();++i){
+        qDebug()<<faces[i];
+        QImage tex_image(faces[i]);
+        tex_image = tex_image.convertToFormat(QImage::Format_RGB888);
+        int width,height;
+        uchar* imageBits = tex_image.bits();
+        if(imageBits){
+            width = tex_image.width();
+            height = tex_image.height();
+            qDebug()<<width<<"  "<<height;
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X+i,
+                         0,GL_RGB,width,height,0,GL_RGB,GL_UNSIGNED_BYTE,imageBits);
+        }else{
+            qDebug()<<"Cubemap texture failed to load at path:"<<faces[i];
+        }
+    }
+    glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_WRAP_R,GL_CLAMP_TO_EDGE);
 
+    return textureID;
+}
 
 GLuint cubeVAO,cubeVBO,cubeTex;
 GLuint planeVAO,planeVBO,planeTex;
@@ -153,7 +180,19 @@ GLuint quadVAO,quadVBO,quadTex;
 MyShaderProgram* framebufferShader = nullptr;
 GLuint framebuffer;
 GLuint textureColorbuffer;
- GLuint rbo;
+GLuint rbo;
+
+QVector<QString> faces{
+    QString(":/image/skybox/right.jpg"),
+    QString(":/image/skybox/left.jpg"),
+    QString(":/image/skybox/top.jpg"),
+    QString(":/image/skybox/bottom.jpg"),
+    QString(":/image/skybox/front.jpg"),
+    QString(":/image/skybox/back.jpg"),
+};
+GLuint skyboxVAO,skyboxVBO,cubemapTexture;
+MyShaderProgram* skyboxShader = nullptr;
+
 void MyWindowRenderer::renderInit()
 {
     qDebug()<<"void MyWindowRenderer::renderInit()";
@@ -164,8 +203,9 @@ void MyWindowRenderer::renderInit()
     vtShaderFile = ":/shaders/depth_testing/depth_testing.vt";
 
     cubeShader = new MyShaderProgram(":/shaders/depth_testing/depth_testing.fg",":/shaders/stencil_test/stencil_test.vt");
-    singleColorShader = new MyShaderProgram(":/shaders/stencil_test/stencil_test_border.fg",":/shaders/stencil_test/stencil_test.vt");
-    framebufferShader = new MyShaderProgram(":/shaders/framebuffer/framebuffer_screen.fg",":/shaders/framebuffer/framebuffer_screen.vt");
+ //   singleColorShader = new MyShaderProgram(":/shaders/stencil_test/stencil_test_border.fg",":/shaders/stencil_test/stencil_test.vt");
+ //   framebufferShader = new MyShaderProgram(":/shaders/framebuffer/framebuffer_screen.fg",":/shaders/framebuffer/framebuffer_screen.vt");
+    skyboxShader = new MyShaderProgram(":/shaders/skybox/skybox.fg",":/shaders/skybox/skybox.vt");
 
     //cubeVAO
     glGenVertexArrays(1,&cubeVAO);
@@ -190,43 +230,56 @@ void MyWindowRenderer::renderInit()
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glBindVertexArray(0);
     //screen quad VAO
-    glGenVertexArrays(1,&quadVAO);
-    glGenBuffers(1,&quadVBO);
-    glBindVertexArray(quadVAO);
-    glBindBuffer(GL_ARRAY_BUFFER,quadVBO);
-    glBufferData(GL_ARRAY_BUFFER,sizeof(quadVertices),&quadVertices,GL_STATIC_DRAW);
+//    glGenVertexArrays(1,&quadVAO);
+//    glGenBuffers(1,&quadVBO);
+//    glBindVertexArray(quadVAO);
+//    glBindBuffer(GL_ARRAY_BUFFER,quadVBO);
+//    glBufferData(GL_ARRAY_BUFFER,sizeof(quadVertices),&quadVertices,GL_STATIC_DRAW);
+//    glEnableVertexAttribArray(0);
+//    glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,4*sizeof(float),(void*)0);
+//    glEnableVertexAttribArray(1);
+//    glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,4*sizeof(float),(void*)(2*sizeof(float)));
+//    //skybox VAO
+    glGenVertexArrays(1,&skyboxVAO);
+    glGenBuffers(1,&skyboxVBO);
+    glBindVertexArray(skyboxVAO);
+    glBindBuffer(GL_ARRAY_BUFFER,skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER,sizeof(skyboxVertices),&skyboxVertices,GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,4*sizeof(float),(void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,4*sizeof(float),(void*)(2*sizeof(float)));
+    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,3*sizeof(float),(void*)0);
+    glBindVertexArray(0);
 
-//    genTexture(cubeTex,":/image/marble.jpg");
-    genTexture(cubeTex,":/image/woodBox.jpg");
-    genTexture(planeTex,":/image/metal.png");
+    //    genTexture(cubeTex,":/image/marble.jpg");
+//    genTexture(cubeTex,":/image/woodBox.jpg");
+//    genTexture(planeTex,":/image/metal.png");
+    cubemapTexture = loadCubemap(faces);
+    skyboxShader->bind();
+    skyboxShader->setUniformValue("skybox",0);
 
-    framebufferShader->bind();
-    framebufferShader->setUniformValue("screenTexture",0);
-    //framebuffer configuration
 
-    glGenFramebuffers(1,&framebuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER,framebuffer);
-    //create a color attachment texture
+//    framebufferShader->bind();
+//    framebufferShader->setUniformValue("screenTexture",0);
+//    //framebuffer configuration
 
-    glGenTextures(1,&textureColorbuffer);
-    glBindTexture(GL_TEXTURE_2D,textureColorbuffer);
-    glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,800,800,0,GL_RGB,GL_UNSIGNED_BYTE,NULL);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-    glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,textureColorbuffer,0);
-    //create a renderbuffer object for depth and stencil attachment
+//    glGenFramebuffers(1,&framebuffer);
+//    glBindFramebuffer(GL_FRAMEBUFFER,framebuffer);
+//    //create a color attachment texture
 
-    glGenRenderbuffers(1,&rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER,rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER,GL_DEPTH24_STENCIL8,800,800);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER,GL_DEPTH_STENCIL_ATTACHMENT,GL_RENDERBUFFER,rbo);
-    if(glCheckFramebufferStatus(GL_FRAMEBUFFER)!=GL_FRAMEBUFFER_COMPLETE)
-        qDebug()<<"error :: framebuffer is not complete!";
-    glBindFramebuffer(GL_FRAMEBUFFER,0);
+//    glGenTextures(1,&textureColorbuffer);
+//    glBindTexture(GL_TEXTURE_2D,textureColorbuffer);
+//    glTexImage2D(GL_TEXTURE_2D,0,GL_RGB,800,800,0,GL_RGB,GL_UNSIGNED_BYTE,NULL);
+//    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+//    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+//    glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,textureColorbuffer,0);
+//    //create a renderbuffer object for depth and stencil attachment
+
+//    glGenRenderbuffers(1,&rbo);
+//    glBindRenderbuffer(GL_RENDERBUFFER,rbo);
+//    glRenderbufferStorage(GL_RENDERBUFFER,GL_DEPTH24_STENCIL8,800,800);
+//    glFramebufferRenderbuffer(GL_FRAMEBUFFER,GL_DEPTH_STENCIL_ATTACHMENT,GL_RENDERBUFFER,rbo);
+//    if(glCheckFramebufferStatus(GL_FRAMEBUFFER)!=GL_FRAMEBUFFER_COMPLETE)
+//        qDebug()<<"error :: framebuffer is not complete!";
+//    glBindFramebuffer(GL_FRAMEBUFFER,0);
 
     finishInit = true;
 }
@@ -241,89 +294,104 @@ void MyWindowRenderer::paint()
     global_camera.doMovement();
     glViewport(0,0,m_viewportSize.width(), m_viewportSize.height());
 
-    //render
-    glBindFramebuffer(GL_FRAMEBUFFER,framebuffer);
+    //render render into framebuffer
+ //   glBindFramebuffer(GL_FRAMEBUFFER,framebuffer);
 
-
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-    glEnable(GL_STENCIL_TEST);
-    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+   // glEnable(GL_DEPTH_TEST);
+   // glDepthFunc(GL_LESS);
+//    glEnable(GL_STENCIL_TEST);
+//    glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+//    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
 
     glClearColor(0.0f,0.0f,0.0f,1.0f);
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
-
-    glActiveTexture(GL_TEXTURE0);
+    //glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
+    //glActiveTexture(GL_TEXTURE0);
 
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 view = global_camera.GetViewMatrix();
     glm::mat4 projection = glm::perspective(global_camera.Zoom,(GLfloat)m_viewportSize.width()/(GLfloat)m_viewportSize.height(),0.1f,100.0f);
 
 
-    singleColorShader->bind();
-    singleColorShader->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
-    singleColorShader->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
+//    singleColorShader->bind();
+//    singleColorShader->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
+//    singleColorShader->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
 
-    cubeShader->bind();
-    cubeShader->setUniformValue("texture1",0);
-    cubeShader->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
-    cubeShader->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
+//    cubeShader->bind();
+//    cubeShader->setUniformValue("texture1",0);
+//    cubeShader->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
+//    cubeShader->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
 
-    //plane
-    glStencilMask(0x00);
-    glBindVertexArray(planeVAO);
-    glBindTexture(GL_TEXTURE_2D,planeTex);
-    model = glm::mat4(1.0);
-    cubeShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    glBindVertexArray(0);
+//    //plane
+// //   glStencilMask(0x00);
+//    glBindVertexArray(planeVAO);
+//    glBindTexture(GL_TEXTURE_2D,planeTex);
+//    model = glm::mat4(1.0);
+//    cubeShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
+//    glDrawArrays(GL_TRIANGLES, 0, 6);
+//    glBindVertexArray(0);
 
-    //cube
-    glStencilFunc(GL_ALWAYS,1,0xFF);
-    glStencilMask(0xFF); //enable write to the stencil buffer
+//    //cube
+// //   glStencilFunc(GL_ALWAYS,1,0xFF);
+// //   glStencilMask(0xFF); //enable write to the stencil buffer
+//    glBindVertexArray(cubeVAO);
+//    glActiveTexture(GL_TEXTURE0);
+//    glBindTexture(GL_TEXTURE_2D,cubeTex);
+//    model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+//    cubeShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
+//    glDrawArrays(GL_TRIANGLES, 0, 36);
+//    model = glm::mat4(1.0f);
+//    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+//    cubeShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
+//    glDrawArrays(GL_TRIANGLES, 0, 36);
+//    glBindVertexArray(0);
 
-    glBindVertexArray(cubeVAO);
+    //skybox
+//    glStencilMask(0x00);
+
+    glDepthFunc(GL_LEQUAL);
+    skyboxShader->bind();
+    glm::mat4 sky_view = glm::mat4(glm::mat3(global_camera.GetViewMatrix()));
+    skyboxShader->setUniformValue("view",QMatrix4x4(glm::value_ptr(sky_view)).transposed());
+    skyboxShader->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
+    glBindVertexArray(skyboxVAO);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D,cubeTex);
-    model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-    cubeShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-    cubeShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glBindTexture(GL_TEXTURE_CUBE_MAP,cubemapTexture);
+    glDrawArrays(GL_TRIANGLES,0,36);
     glBindVertexArray(0);
+    glDepthFunc(GL_LESS);
 
     //2nd render pass
-    glStencilFunc(GL_NOTEQUAL,1,0xFF);
-    glStencilMask(0x00);
-    glDisable(GL_DEPTH_TEST);
+//    glStencilFunc(GL_NOTEQUAL,1,0xFF);
+//    glStencilMask(0x00);
+//    glDisable(GL_DEPTH_TEST);
 
-    GLfloat scale = 1.1f;
-    singleColorShader->bind();
-    glBindVertexArray(cubeVAO);
-    glBindTexture(GL_TEXTURE_2D, cubeTex);
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-    model = glm::scale(model,glm::vec3(scale,scale,scale));
-    singleColorShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(scale, scale, scale));
-    singleColorShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    glBindVertexArray(0);
-    glStencilMask(0xFF);
-    glEnable(GL_DEPTH_TEST);
+//    GLfloat scale = 1.1f;
+//    singleColorShader->bind();
+//    glBindVertexArray(cubeVAO);
+//    glBindTexture(GL_TEXTURE_2D, cubeTex);
+//    model = glm::mat4(1.0f);
+//    model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+//    model = glm::scale(model,glm::vec3(scale,scale,scale));
+//    singleColorShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
+//    glDrawArrays(GL_TRIANGLES, 0, 36);
+//    model = glm::mat4(1.0f);
+//    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+//    model = glm::scale(model, glm::vec3(scale, scale, scale));
+//    singleColorShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
+//    glDrawArrays(GL_TRIANGLES, 0, 36);
+//    glBindVertexArray(0);
+//    glStencilMask(0xFF);
+//    glEnable(GL_DEPTH_TEST);
 
-    glBindFramebuffer(GL_FRAMEBUFFER,0);
-    glDisable(GL_DEPTH_TEST);
-    glClear(GL_COLOR_BUFFER_BIT);
-    framebufferShader->bind();
-    glBindVertexArray(quadVAO);
-    glBindTexture(GL_TEXTURE_2D,textureColorbuffer);
-    glDrawArrays(GL_TRIANGLES,0,6);
+    //off-screen render
+//    glBindFramebuffer(GL_FRAMEBUFFER,0);
+//    glDisable(GL_DEPTH_TEST);
+//    glClear(GL_COLOR_BUFFER_BIT);
+//    framebufferShader->bind();
+//    glBindVertexArray(quadVAO);
+//    glBindTexture(GL_TEXTURE_2D,textureColorbuffer);
+//    glDrawArrays(GL_TRIANGLES,0,6);
 }

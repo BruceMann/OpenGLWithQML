@@ -9,5 +9,11 @@
         <file>image/matrix.jpg</file>
         <file>image/marble.jpg</file>
         <file>image/metal.png</file>
+        <file>image/skybox/back.jpg</file>
+        <file>image/skybox/bottom.jpg</file>
+        <file>image/skybox/front.jpg</file>
+        <file>image/skybox/left.jpg</file>
+        <file>image/skybox/right.jpg</file>
+        <file>image/skybox/top.jpg</file>
     </qresource>
 </RCC>

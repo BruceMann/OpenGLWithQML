@@ -17,5 +17,7 @@
         <file>shaders/stencil_test/stencil_test_border.fg</file>
         <file>shaders/framebuffer/framebuffer_screen.fg</file>
         <file>shaders/framebuffer/framebuffer_screen.vt</file>
+        <file>shaders/skybox/skybox.fg</file>
+        <file>shaders/skybox/skybox.vt</file>
     </qresource>
 </RCC>
