@@ -21,5 +21,6 @@
         <file>shaders/skybox/skybox.vt</file>
         <file>shaders/environment_mapping/environment_map.fg</file>
         <file>shaders/environment_mapping/environment_map.vt</file>
+        <file>models/sphere/sphere.obj</file>
     </qresource>
 </RCC>

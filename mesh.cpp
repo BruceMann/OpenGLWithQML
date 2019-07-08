@@ -13,6 +13,7 @@ Mesh::Mesh(QVector<Vertex> vert, QVector<GLuint> ind, QVector<Texture> tex):vert
 void Mesh::Draw(QOpenGLShaderProgram *shader)
 {
     m_shader = shader;
+    m_shader->bind();
     //bind appropriate texture
     int tmpNr = 0;
     int diffuseNr =0;
@@ -29,7 +30,7 @@ void Mesh::Draw(QOpenGLShaderProgram *shader)
         glBindTexture(GL_TEXTURE_2D,this->textures[i].id);
     }
 
-    m_shader->setUniformValue("material.shininess",32.0f);
+    //m_shader->setUniformValue("material.shininess",32.0f);
 
     //draw mesh
     glBindVertexArray(this->VAO);

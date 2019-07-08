@@ -232,6 +232,11 @@ void MyWindowRenderer::renderInit()
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,sizeof(float)*6,(void*)(3*sizeof(float)));
     glBindVertexArray(0);
+
+    //model data load
+    global_Model.LoadModel("C:/Users/Bruce/Documents/OpenGLWithQML/models/sphere/sphere.obj");
+//     global_Model.LoadModel("D:/LearnOpenGL-master/resources/objects/rock/rock.obj");
+//    global_Model.LoadModel("D:/LearnOpenGL-master/resources/objects/nanosuit/nanosuit.obj");
     //plane VAO
     glGenVertexArrays(1,&planeVAO);
     glGenBuffers(1,&planeVBO);
@@ -353,21 +358,27 @@ void MyWindowRenderer::paint()
     model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
     cubeShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
     glDrawArrays(GL_TRIANGLES, 0, 36);
+    glBindVertexArray(0);
+
+
 
     //cube 2 use environment mapping texture
     environmentMapShader->bind();
-    glBindVertexArray(normalCubeVAO);
+//    glBindVertexArray(normalCubeVAO);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP,cubemapTexture);
     glm::vec3 cameraPos = global_camera.Position;
     environmentMapShader->setUniformValue("cameraPos",QVector3D(cameraPos.x,cameraPos.y,cameraPos.z));
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+//    model = glm::scale(model,glm::vec3(0.2f,0.2f,0.2f));
     environmentMapShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
     environmentMapShader->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
     environmentMapShader->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    glBindVertexArray(0);
+////    glDrawArrays(GL_TRIANGLES, 0, 36);
+////    glBindVertexArray(0);
+
+    global_Model.Draw(environmentMapShader);
 
     //skybox
     glStencilMask(0x00);
@@ -396,11 +407,11 @@ void MyWindowRenderer::paint()
     model = glm::scale(model,glm::vec3(scale,scale,scale));
     singleColorShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
     glDrawArrays(GL_TRIANGLES, 0, 36);
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(scale, scale, scale));
-    singleColorShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+//    model = glm::mat4(1.0f);
+//    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+//    model = glm::scale(model, glm::vec3(scale, scale, scale));
+//    singleColorShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
+//    glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
     glStencilMask(0xFF);
     glEnable(GL_DEPTH_TEST);
