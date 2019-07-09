@@ -437,13 +437,13 @@ void MyWindowRenderer::paint()
     normal_virtualization_shader->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
 
 //    global_Model.Draw(environmentMapShader);
+
     model_shader->bind();
     model_shader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
     model_shader->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
     model_shader->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
-
-    global_Model.Draw(model_shader);
-    global_Model.Draw(normal_virtualization_shader);
+    global_Model.Draw(model_shader);  //default model
+   // global_Model.Draw(normal_virtualization_shader);   //model vertex normal visualization
 
     //skybox
     glStencilMask(0x00);
