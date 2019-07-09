@@ -7,7 +7,7 @@ class MyShaderProgram:public QOpenGLShaderProgram
 {
 public:
     MyShaderProgram();
-    MyShaderProgram(QString fragmentPath,QString vertexPath);
+    MyShaderProgram(QString fragmentPath,QString vertexPath,QString geometryPath = QString());
     ~MyShaderProgram();
 
     QString errorMsg;

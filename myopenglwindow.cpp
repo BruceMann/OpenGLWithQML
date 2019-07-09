@@ -196,6 +196,11 @@ MyShaderProgram* skyboxShader = nullptr;
 MyShaderProgram* environmentMapShader = nullptr;
 GLuint normalCubeVAO,normalCubeVBO;
 
+
+MyShaderProgram* normal_virtualization_shader = nullptr;
+
+MyShaderProgram* model_shader = nullptr;
+
 void MyWindowRenderer::renderInit()
 {
     qDebug()<<"void MyWindowRenderer::renderInit()";
@@ -210,6 +215,11 @@ void MyWindowRenderer::renderInit()
     framebufferShader = new MyShaderProgram(":/shaders/framebuffer/framebuffer_screen.fg",":/shaders/framebuffer/framebuffer_screen.vt");
     skyboxShader = new MyShaderProgram(":/shaders/skybox/skybox.fg",":/shaders/skybox/skybox.vt");
     environmentMapShader = new MyShaderProgram(":/shaders/environment_mapping/environment_map.fg",":/shaders/environment_mapping/environment_map.vt");
+    normal_virtualization_shader = new MyShaderProgram(":/shaders/geometry_shader/normal_visualization.fg",
+                                                       ":/shaders/geometry_shader/normal_visualization.vt",
+                                                       ":/shaders/geometry_shader/normal_visualization.gs");
+    model_shader = new MyShaderProgram(":/shaders/model_loading.fs",
+                                       ":/shaders/model_loading.vs");
     //cubeVAO
     glGenVertexArrays(1,&cubeVAO);
     glGenBuffers(1,&cubeVBO);
@@ -234,9 +244,9 @@ void MyWindowRenderer::renderInit()
     glBindVertexArray(0);
 
     //model data load
-    global_Model.LoadModel("C:/Users/Bruce/Documents/OpenGLWithQML/models/sphere/sphere.obj");
+//    global_Model.LoadModel("C:/Users/Bruce/Documents/OpenGLWithQML/models/sphere/sphere.obj");
 //     global_Model.LoadModel("D:/LearnOpenGL-master/resources/objects/rock/rock.obj");
-//    global_Model.LoadModel("D:/LearnOpenGL-master/resources/objects/nanosuit/nanosuit.obj");
+    global_Model.LoadModel("D:/LearnOpenGL-master/resources/objects/nanosuit/nanosuit.obj");
     //plane VAO
     glGenVertexArrays(1,&planeVAO);
     glGenBuffers(1,&planeVBO);
@@ -377,8 +387,20 @@ void MyWindowRenderer::paint()
     environmentMapShader->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
 ////    glDrawArrays(GL_TRIANGLES, 0, 36);
 ////    glBindVertexArray(0);
+    normal_virtualization_shader->bind();
 
-    global_Model.Draw(environmentMapShader);
+    normal_virtualization_shader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
+    normal_virtualization_shader->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
+    normal_virtualization_shader->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
+
+//    global_Model.Draw(environmentMapShader);
+    model_shader->bind();
+    model_shader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
+    model_shader->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
+    model_shader->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
+
+    global_Model.Draw(model_shader);
+    global_Model.Draw(normal_virtualization_shader);
 
     //skybox
     glStencilMask(0x00);

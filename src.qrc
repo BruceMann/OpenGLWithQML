@@ -22,5 +22,8 @@
         <file>shaders/environment_mapping/environment_map.fg</file>
         <file>shaders/environment_mapping/environment_map.vt</file>
         <file>models/sphere/sphere.obj</file>
+        <file>shaders/geometry_shader/normal_visualization.fg</file>
+        <file>shaders/geometry_shader/normal_visualization.gs</file>
+        <file>shaders/geometry_shader/normal_visualization.vt</file>
     </qresource>
 </RCC>
