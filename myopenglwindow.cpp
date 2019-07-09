@@ -201,6 +201,12 @@ MyShaderProgram* normal_virtualization_shader = nullptr;
 
 MyShaderProgram* model_shader = nullptr;
 
+MyShaderProgram* instancing_shader = nullptr;
+GLuint color_quad_VAO,color_quad_VBO,instanceVBO;
+glm::vec2 translations[100];
+int index= 0;
+float offset = 0.1f;
+
 void MyWindowRenderer::renderInit()
 {
     qDebug()<<"void MyWindowRenderer::renderInit()";
@@ -220,6 +226,9 @@ void MyWindowRenderer::renderInit()
                                                        ":/shaders/geometry_shader/normal_visualization.gs");
     model_shader = new MyShaderProgram(":/shaders/model_loading.fs",
                                        ":/shaders/model_loading.vs");
+    instancing_shader = new MyShaderProgram(":/shaders/instancing/instancing.fg",
+                                            ":/shaders/instancing/instancing.vt");
+
     //cubeVAO
     glGenVertexArrays(1,&cubeVAO);
     glGenBuffers(1,&cubeVBO);
@@ -242,11 +251,40 @@ void MyWindowRenderer::renderInit()
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,sizeof(float)*6,(void*)(3*sizeof(float)));
     glBindVertexArray(0);
+    //color_quad VAO
+    for(int y=-10;y<10;y+=2){
+        for(int x=-10;x<10;x+=2){
+            glm::vec2 translation;
+            translation.x = (float)x/10.0f+offset;
+            translation.y = (float)y/10.0f+offset;
+            translations[index++] = translation;
+        }
+    }
+    glGenBuffers(1,&instanceVBO);
+    glBindBuffer(GL_ARRAY_BUFFER,instanceVBO);
+    glBufferData(GL_ARRAY_BUFFER,sizeof(glm::vec3)*100,&translations[0],GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER,0);
 
+    glGenVertexArrays(1,&color_quad_VAO);
+    glGenBuffers(1,&color_quad_VBO);
+    glBindVertexArray(color_quad_VAO);
+    glBindBuffer(GL_ARRAY_BUFFER,color_quad_VBO);
+    glBufferData(GL_ARRAY_BUFFER,sizeof(quadVertices_color),quadVertices_color,GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,5*sizeof(float),(void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,5*sizeof(float),(void*)(2*sizeof(float)));
+    glEnableVertexAttribArray(2);
+    glBindBuffer(GL_ARRAY_BUFFER,instanceVBO);
+    glVertexAttribPointer(2,2,GL_FLOAT,GL_FALSE,2*sizeof(float),(void*)0);
+    glVertexAttribDivisor(2,1);
+    glBindBuffer(GL_ARRAY_BUFFER,0);
+    glBindVertexArray(0);
     //model data load
 //    global_Model.LoadModel("C:/Users/Bruce/Documents/OpenGLWithQML/models/sphere/sphere.obj");
 //     global_Model.LoadModel("D:/LearnOpenGL-master/resources/objects/rock/rock.obj");
     global_Model.LoadModel("D:/LearnOpenGL-master/resources/objects/nanosuit/nanosuit.obj");
+
     //plane VAO
     glGenVertexArrays(1,&planeVAO);
     glGenBuffers(1,&planeVBO);
@@ -370,7 +408,12 @@ void MyWindowRenderer::paint()
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
 
-
+    //instancing quad
+    glStencilMask(0x00);
+    glBindVertexArray(color_quad_VAO);
+    instancing_shader->bind();
+    glDrawArraysInstanced(GL_TRIANGLES,0,6,100);
+    glBindVertexArray(0);
 
     //cube 2 use environment mapping texture
     environmentMapShader->bind();
