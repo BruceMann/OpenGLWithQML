@@ -27,5 +27,7 @@
         <file>shaders/geometry_shader/normal_visualization.vt</file>
         <file>shaders/instancing/instancing.fg</file>
         <file>shaders/instancing/instancing.vt</file>
+        <file>shaders/stencil_test/planeReflection.fg</file>
+        <file>shaders/stencil_test/planeReflection.vt</file>
     </qresource>
 </RCC>

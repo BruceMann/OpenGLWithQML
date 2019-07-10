@@ -1,0 +1,9 @@
+#version 330 core
+
+in vec2 TexCoords;
+uniform sampler2D planeTexture;
+
+void main(){
+    vec3 color  = texture()
+    gl_FragColor =
+}
