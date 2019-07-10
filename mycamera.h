@@ -17,7 +17,7 @@ enum Camera_Movement{
 };
 
 // Default camera values
-const GLfloat YAW        = -90.0f;
+const GLfloat YAW        =  -90.0f;
 const GLfloat PITCH      =  0.0f;
 const GLfloat SPEED      =  3.0f;
 const GLfloat SENSITIVTY =  0.25f;
@@ -41,8 +41,8 @@ public:
     GLfloat MouseSensitivity;
     GLfloat Zoom;
 
-    GLfloat lastX = 400.0f;
-    GLfloat lastY = 400.0f;
+    GLfloat lastX = 0.0f;
+    GLfloat lastY = 0.0f;
 
     QMap<int,bool> m_keys;
 

@@ -13,6 +13,8 @@
 
 #include "myshaderprogram.h"
 
+class ShaderRenderer;
+
 //! [1]
 class MyWindowRenderer:public QObject,protected QOpenGLExtraFunctions
 {
@@ -53,6 +55,8 @@ public:
 
 //    void doMovement();   //camera control
 
+    ShaderRenderer *getRenderer(const QString& name);
+
 public slots:
     void paint();
 
@@ -63,6 +67,8 @@ private:
     MyShaderProgram* shader;
     MyShaderProgram* lampShader;
     MyShaderProgram* cubeShader;
+
+    QMap<QString,ShaderRenderer*> m_renderersMap;
 
     QQuickWindow *m_window;
 
@@ -113,6 +119,7 @@ private:
     QString m_vtshaderFile;
 
     MyWindowRenderer* m_renderer;
+
 };
 //! [2]
 

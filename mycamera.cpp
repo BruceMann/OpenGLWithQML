@@ -97,7 +97,6 @@ bool MyCamera::eventFilter(QObject *obj, QEvent *event)
         updateCameraVectors();
         return true;
     }
-
 }
 
 void MyCamera::updateCameraVectors()
@@ -111,4 +110,9 @@ void MyCamera::updateCameraVectors()
     // Also re-calculate the Right and Up vector
     this->Right = glm::normalize(glm::cross(this->Front, this->WorldUp));  // Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
     this->Up    = glm::normalize(glm::cross(this->Right, this->Front));
+
+    qDebug()<<this->Yaw<<"   "<<this->Pitch<<"  "<<
+              "position x"<<this->Position.x<<
+              "position y"<<this->Position.y<<
+              "position z"<<this->Position.z;
 }

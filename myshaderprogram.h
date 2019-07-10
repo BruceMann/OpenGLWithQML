@@ -10,6 +10,8 @@ public:
     MyShaderProgram(QString fragmentPath,QString vertexPath,QString geometryPath = QString());
     ~MyShaderProgram();
 
+    void setShaderProgram(QString fragmentPath,QString vertexPath,QString geometryPath = QString());
+
     QString errorMsg;
 };
 

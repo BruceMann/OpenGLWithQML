@@ -24,7 +24,8 @@ SOURCES += \
     mycamera.cpp \
     mesh.cpp \
     model.cpp \
-    myshaderprogram.cpp
+    myshaderprogram.cpp \
+    shaderrenderer.cpp
 
 RESOURCES += qml.qrc \
     src.qrc \
@@ -47,7 +48,8 @@ HEADERS += \
     mycamera.h \
     mesh.h \
     model.h \
-    myshaderprogram.h
+    myshaderprogram.h \
+    shaderrenderer.h
 
 DISTFILES +=
 

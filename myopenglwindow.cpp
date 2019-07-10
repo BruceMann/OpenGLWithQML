@@ -25,9 +25,11 @@
 
 #include "model.h"
 
+#include "shaderrenderer.h"
+
 Model global_Model;
 
-MyCamera global_camera(glm::vec3(1.43, 2.6f,  2.3f));
+MyCamera global_camera(glm::vec3(1.0f, 1.6f,  6.3f));
 
 //glm::vec3 lightPos(-3.0f,5.0f, -5.0f);
 glm::vec3 lightPos(0.0f,0.0f,0.0f);
@@ -49,7 +51,7 @@ glm::vec3 cubePositions[] = {
 GLfloat deltaTime = 0.0f;   //Time between current frame and last frame
 GLfloat lastFrame = 0.0f;   //Time of last frame
 
-
+ShaderRenderer* shaderRender = nullptr;
 
 MyOpenglWindow::MyOpenglWindow()
     :m_renderer(nullptr)
@@ -71,8 +73,8 @@ MyOpenglWindow::MyOpenglWindow()
     updateTimer->start();
 
     global_camera.MovementSpeed=0.08f;
-    global_camera.Pitch = -35.7f;
-    global_camera.Yaw = -111.3f;
+    global_camera.Pitch = -5.7f;
+    global_camera.Yaw = -90.0f;
 
     this->installEventFilter(&global_camera);
 }
@@ -136,19 +138,28 @@ void MyWindowRenderer::genTexture(GLuint& texture,const QString& imageFile)
     width = tex_image.width();
     height = tex_image.height();
 
-    qDebug()<<width<<height<<imageBits;
-
     glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA,width,height,0,GL_RGBA,GL_UNSIGNED_BYTE,imageBits);
     glGenerateMipmap(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture when done, so we won't accidentily mess up our texture.
+}
+
+ShaderRenderer* MyWindowRenderer::getRenderer(const QString &name)
+{
+    ShaderRenderer* cubeRender = nullptr;
+    auto iter = m_renderersMap.find(name);
+    if(iter!=m_renderersMap.end())
+         cubeRender = iter.value();
+    if(!cubeRender){
+        qDebug()<<"NULL ptr ERROR! ";
+    }
+    return cubeRender;
 }
 
 GLuint loadCubemap(QVector<QString>& faces){
     GLuint textureID;
     glGenTextures(1,&textureID);
     glBindTexture(GL_TEXTURE_CUBE_MAP,textureID);
-    for(GLuint i=0;i<faces.size();++i){
-        qDebug()<<faces[i];
+    for(GLuint i=0;i<(GLuint)(faces.size());++i){
         QImage tex_image(faces[i]);
         tex_image = tex_image.convertToFormat(QImage::Format_RGB888);
         int width,height;
@@ -156,7 +167,6 @@ GLuint loadCubemap(QVector<QString>& faces){
         if(imageBits){
             width = tex_image.width();
             height = tex_image.height();
-            qDebug()<<width<<"  "<<height;
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X+i,
                          0,GL_RGB,width,height,0,GL_RGB,GL_UNSIGNED_BYTE,imageBits);
         }else{
@@ -216,11 +226,12 @@ void MyWindowRenderer::renderInit()
     fgShaderFile = ":/shaders/depth_testing/depth_testing.fg";
     vtShaderFile = ":/shaders/depth_testing/depth_testing.vt";
 
-    cubeShader = new MyShaderProgram(":/shaders/depth_testing/depth_testing.fg",":/shaders/stencil_test/stencil_test.vt");
+    cubeShader = new MyShaderProgram(":/shaders/depth_testing/depth_testing.fg",
+                                     ":/shaders/stencil_test/stencil_test.vt");
     singleColorShader = new MyShaderProgram(":/shaders/stencil_test/stencil_test_border.fg",":/shaders/stencil_test/stencil_test.vt");
     framebufferShader = new MyShaderProgram(":/shaders/framebuffer/framebuffer_screen.fg",":/shaders/framebuffer/framebuffer_screen.vt");
     skyboxShader = new MyShaderProgram(":/shaders/skybox/skybox.fg",":/shaders/skybox/skybox.vt");
-    environmentMapShader = new MyShaderProgram(":/shaders/environment_mapping/environment_map.fg",":/shaders/environment_mapping/environment_map.vt");
+
     normal_virtualization_shader = new MyShaderProgram(":/shaders/geometry_shader/normal_visualization.fg",
                                                        ":/shaders/geometry_shader/normal_visualization.vt",
                                                        ":/shaders/geometry_shader/normal_visualization.gs");
@@ -229,28 +240,45 @@ void MyWindowRenderer::renderInit()
     instancing_shader = new MyShaderProgram(":/shaders/instancing/instancing.fg",
                                             ":/shaders/instancing/instancing.vt");
 
+    //  *************test**************
+    shaderRender = new ShaderRenderer();
+    shaderRender->setShaderProgram(":/shaders/depth_testing/depth_testing.fg",
+                                   ":/shaders/stencil_test/stencil_test.vt");
+    shaderRender->setVertexInfo(VertexType::vertex_position,3);
+    shaderRender->setVertexInfo(VertexType::vertex_texcoords,2);
+    shaderRender->vertexDataParse(sizeof(cubeVertices),cubeVertices,5);
+    //  *************test**************
+
+    ShaderRenderer* cubeRender = new ShaderRenderer();
+    cubeRender->setShaderProgram(":/shaders/depth_testing/depth_testing.fg",
+                                   ":/shaders/stencil_test/stencil_test.vt");
+    cubeRender->setVertexInfo(VertexType::vertex_position,3);
+    cubeRender->setVertexInfo(VertexType::vertex_texcoords,2);
+    cubeRender->vertexDataParse(sizeof(cubeVertices),cubeVertices,5);
+    m_renderersMap.insert("cubeRender",cubeRender);
+
     //cubeVAO
     glGenVertexArrays(1,&cubeVAO);
     glGenBuffers(1,&cubeVBO);
     glBindVertexArray(cubeVAO);
     glBindBuffer(GL_ARRAY_BUFFER,cubeVBO);
+    qDebug()<<"BBBBBBBBBB"<<sizeof(cubeVertices);
     glBufferData(GL_ARRAY_BUFFER,sizeof(cubeVertices),cubeVertices,GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glBindVertexArray(0);
+
     //cube_normal VAO
-    glGenVertexArrays(1,&normalCubeVAO);
-    glBindVertexArray(normalCubeVAO);
-    glGenBuffers(1,&normalCubeVBO);
-    glBindBuffer(GL_ARRAY_BUFFER,normalCubeVBO);
-    glBufferData(GL_ARRAY_BUFFER,sizeof(cubeVertices_normal),cubeVertices_normal,GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,sizeof(float)*6,(void*)0);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,sizeof(float)*6,(void*)(3*sizeof(float)));
-    glBindVertexArray(0);
+    ShaderRenderer* envirCubeRender = new ShaderRenderer();
+    envirCubeRender->setShaderProgram(":/shaders/environment_mapping/environment_map.fg",
+                                      ":/shaders/environment_mapping/environment_map.vt");
+    envirCubeRender->setVertexInfo(VertexType::vertex_position,3);
+    envirCubeRender->setVertexInfo(VertexType::vertex_normal,3);
+    envirCubeRender->vertexDataParse(sizeof(cubeVertices_normal),cubeVertices_normal,6);
+    m_renderersMap.insert("envirCubeRender",envirCubeRender);
+
     //color_quad VAO
     for(int y=-10;y<10;y+=2){
         for(int x=-10;x<10;x+=2){
@@ -283,7 +311,7 @@ void MyWindowRenderer::renderInit()
     //model data load
 //    global_Model.LoadModel("C:/Users/Bruce/Documents/OpenGLWithQML/models/sphere/sphere.obj");
 //     global_Model.LoadModel("D:/LearnOpenGL-master/resources/objects/rock/rock.obj");
-    global_Model.LoadModel("D:/LearnOpenGL-master/resources/objects/nanosuit/nanosuit.obj");
+//    global_Model.LoadModel("D:/LearnOpenGL-master/resources/objects/nanosuit/nanosuit.obj");
 
     //plane VAO
     glGenVertexArrays(1,&planeVAO);
@@ -296,6 +324,7 @@ void MyWindowRenderer::renderInit()
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glBindVertexArray(0);
+
     //screen quad VAO
     glGenVertexArrays(1,&quadVAO);
     glGenBuffers(1,&quadVBO);
@@ -306,6 +335,7 @@ void MyWindowRenderer::renderInit()
     glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,4*sizeof(float),(void*)0);
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,4*sizeof(float),(void*)(2*sizeof(float)));
+
 //    //skybox VAO
     glGenVertexArrays(1,&skyboxVAO);
     glGenBuffers(1,&skyboxVBO);
@@ -322,8 +352,6 @@ void MyWindowRenderer::renderInit()
     cubemapTexture = loadCubemap(faces);
     skyboxShader->bind();
     skyboxShader->setUniformValue("skybox",0);
-    environmentMapShader->bind();
-    environmentMapShader->setUniformValue("skybox",0);
 
     framebufferShader->bind();
     framebufferShader->setUniformValue("screenTexture",0);
@@ -400,50 +428,72 @@ void MyWindowRenderer::paint()
     //cube
     glStencilFunc(GL_ALWAYS,1,0xFF);
     glStencilMask(0xFF); //enable write to the stencil buffer
-    glBindVertexArray(cubeVAO);
+//    glBindVertexArray(cubeVAO);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D,cubeTex);
+//    model = glm::mat4(1.0f);
+//    model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+//    cubeShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
+//    glDrawArrays(GL_TRIANGLES, 0, 36);
+//    glBindVertexArray(0);
+
+    ShaderRenderer* cubeRender = getRenderer("cubeRender");
+    if(!cubeRender)
+        return;
+    cubeRender->getShaderProgram()->bind();
+    model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-    cubeShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    glBindVertexArray(0);
+    cubeRender->getShaderProgram()->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
+    cubeRender->getShaderProgram()->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
+    cubeRender->getShaderProgram()->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
+    cubeRender->draw();
+
+    shaderRender->getShaderProgram()->bind();
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D,cubeTex);
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(2.0f, 0.0f, -1.0f));
+    shaderRender->getShaderProgram()->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
+    shaderRender->getShaderProgram()->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
+    shaderRender->getShaderProgram()->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
+    shaderRender->draw();
 
     //instancing quad
-    glStencilMask(0x00);
-    glBindVertexArray(color_quad_VAO);
-    instancing_shader->bind();
-    glDrawArraysInstanced(GL_TRIANGLES,0,6,100);
-    glBindVertexArray(0);
+//    glStencilMask(0x00);
+//    glBindVertexArray(color_quad_VAO);
+//    instancing_shader->bind();
+//    glDrawArraysInstanced(GL_TRIANGLES,0,6,100);
+//    glBindVertexArray(0);
 
     //cube 2 use environment mapping texture
-    environmentMapShader->bind();
-//    glBindVertexArray(normalCubeVAO);
+    ShaderRenderer* envirCube = getRenderer("envirCubeRender");
+    if(!envirCube)
+        return;
+    envirCube->getShaderProgram()->bind();
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP,cubemapTexture);
     glm::vec3 cameraPos = global_camera.Position;
-    environmentMapShader->setUniformValue("cameraPos",QVector3D(cameraPos.x,cameraPos.y,cameraPos.z));
+    envirCube->getShaderProgram()->setUniformValue("cameraPos",QVector3D(cameraPos.x,cameraPos.y,cameraPos.z));
     model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-//    model = glm::scale(model,glm::vec3(0.2f,0.2f,0.2f));
-    environmentMapShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
-    environmentMapShader->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
-    environmentMapShader->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
-////    glDrawArrays(GL_TRIANGLES, 0, 36);
-////    glBindVertexArray(0);
-    normal_virtualization_shader->bind();
+    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 2.0f));
+    envirCube->getShaderProgram()->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
+    envirCube->getShaderProgram()->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
+    envirCube->getShaderProgram()->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
+    envirCube->draw();
 
+    normal_virtualization_shader->bind();
     normal_virtualization_shader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
     normal_virtualization_shader->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
     normal_virtualization_shader->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
 
 //    global_Model.Draw(environmentMapShader);
 
-    model_shader->bind();
-    model_shader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
-    model_shader->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
-    model_shader->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
-    global_Model.Draw(model_shader);  //default model
-   // global_Model.Draw(normal_virtualization_shader);   //model vertex normal visualization
+//    model_shader->bind();
+//    model_shader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
+//    model_shader->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
+//    model_shader->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
+//    global_Model.Draw(model_shader);  //default model
+//   // global_Model.Draw(normal_virtualization_shader);   //model vertex normal visualization
 
     //skybox
     glStencilMask(0x00);
@@ -472,11 +522,11 @@ void MyWindowRenderer::paint()
     model = glm::scale(model,glm::vec3(scale,scale,scale));
     singleColorShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
     glDrawArrays(GL_TRIANGLES, 0, 36);
-//    model = glm::mat4(1.0f);
-//    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-//    model = glm::scale(model, glm::vec3(scale, scale, scale));
-//    singleColorShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
-//    glDrawArrays(GL_TRIANGLES, 0, 36);
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(2.0f, 0.0f, -1.0f));
+    model = glm::scale(model, glm::vec3(scale, scale, scale));
+    singleColorShader->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
+    glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
     glStencilMask(0xFF);
     glEnable(GL_DEPTH_TEST);
