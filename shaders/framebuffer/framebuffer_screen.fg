@@ -50,17 +50,17 @@ void main(){
     //color = vec3(0.2126*color.r+0.7152*color.g+0.0722*color.b);
 
     //3. Kernel
- // vec3 sampleTex[9];
- // for(int i = 0; i < 9; i++)
- //  {
- //      sampleTex[i] = vec3(texture(screenTexture, TexCoords.st + offsets[i]));
- //  }
- //  vec3 col = vec3(0.0);
- //  for(int i = 0; i < 9; i++){
- //      //col += sampleTex[i] * kernel[i];
- //      //col += sampleTex[i] * kernel_blur[i];
- //      //col += sampleTex[i] * kernel_edge_detection[i];
- //  }
+//  vec3 sampleTex[9];
+//  for(int i = 0; i < 9; i++)
+//   {
+//       sampleTex[i] = vec3(texture(screenTexture, TexCoords.st + offsets[i]));
+//   }
+//   color = vec3(0.0);
+//   for(int i = 0; i < 9; i++){
+//       //color += sampleTex[i] * kernel[i];
+//       //color += sampleTex[i] * kernel_blur[i];
+//       //color += sampleTex[i] * kernel_edge_detection[i];
+//   }
 
     gl_FragColor = vec4(color,1.0);
 }
