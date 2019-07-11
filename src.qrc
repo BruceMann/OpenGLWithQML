@@ -29,5 +29,9 @@
         <file>shaders/instancing/instancing.vt</file>
         <file>shaders/stencil_test/planeReflection.fg</file>
         <file>shaders/stencil_test/planeReflection.vt</file>
+        <file>shaders/lighting/colors.fg</file>
+        <file>shaders/lighting/colors.vt</file>
+        <file>shaders/lighting/basic_light.fg</file>
+        <file>shaders/lighting/basic_light.vt</file>
     </qresource>
 </RCC>

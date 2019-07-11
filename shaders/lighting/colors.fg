@@ -1,0 +1,13 @@
+#version 330 core
+
+uniform vec3 objectColor;
+uniform vec3 lightColor;
+uniform bool pureWhite = false;
+
+
+void main(){
+    vec3 color = vec3(1.0);
+    if(!pureWhite)
+        color = objectColor*lightColor;
+    gl_FragColor = vec4(color,1.0);
+}

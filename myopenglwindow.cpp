@@ -72,9 +72,10 @@ MyOpenglWindow::MyOpenglWindow()
     });
     updateTimer->start();
 
-    global_camera.MovementSpeed=0.18f;
-    global_camera.Pitch = -5.7f;
-    global_camera.Yaw = -90.0f;
+    global_camera.MovementSpeed=0.04f;
+    global_camera.Pitch = -30.7f;
+    global_camera.Yaw = -50.0f;
+    global_camera.Position = glm::vec3(-1.0f,0.4f,0.5f);
 
     this->installEventFilter(&global_camera);
 }
@@ -221,8 +222,6 @@ void MyWindowRenderer::renderInit()
 {
     qDebug()<<"void MyWindowRenderer::renderInit()";
 
-    //    fgShaderFile = ":/shaders/base2D/base.fg";
-    //    vtShaderFile = ":/shaders/base2D/base.vt";
     fgShaderFile = ":/shaders/depth_testing/depth_testing.fg";
     vtShaderFile = ":/shaders/depth_testing/depth_testing.vt";
 
@@ -263,6 +262,21 @@ void MyWindowRenderer::renderInit()
     cubeRender->setVertexInfo(VertexType::vertex_texcoords,2);
     cubeRender->vertexDataParse(sizeof(cubeVertices),cubeVertices,5);
     m_renderersMap.insert("cubeRender",cubeRender);
+
+    ShaderRenderer* colorRender = new ShaderRenderer();
+    colorRender->setShaderProgram(":/shaders/lighting/colors.fg",
+                                  ":/shaders/lighting/colors.vt");
+    colorRender->setVertexInfo(VertexType::vertex_position,3);
+    colorRender->vertexDataParse(sizeof(color_vertices),color_vertices,3);
+    m_renderersMap.insert("colorRender",colorRender);
+
+    ShaderRenderer* lightRender = new ShaderRenderer();
+    lightRender->setShaderProgram(":/shaders/lighting/basic_light.fg",
+                                  ":/shaders/lighting/basic_light.vt");
+    lightRender->setVertexInfo(VertexType::vertex_position,3);
+    lightRender->setVertexInfo(VertexType::vertex_normal,3);
+    lightRender->vertexDataParse(sizeof(cubeVertices_normal),cubeVertices_normal,6);
+    m_renderersMap.insert("lightRender",lightRender);
 
     //cubeVAO
     glGenVertexArrays(1,&cubeVAO);
@@ -514,18 +528,48 @@ void MyWindowRenderer::paint()
     envirCube->getShaderProgram()->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
     envirCube->draw();
 
+    ShaderRenderer* colorRender = getRenderer("colorRender");
+    if(!colorRender)
+        return;
+    colorRender->getShaderProgram()->bind();
+
+    model = glm::mat4(1.0);
+    model = glm::translate(model,glm::vec3(0.0f,2.0f,0.0f));
+    model = glm::scale(model,glm::vec3(0.2f,0.2f,0.2f));
+    colorRender->getShaderProgram()->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
+    colorRender->getShaderProgram()->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
+    colorRender->getShaderProgram()->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
+    colorRender->getShaderProgram()->setUniformValue("pureWhite",true);
+    colorRender->draw();
+
+    ShaderRenderer* lightRender = getRenderer("lightRender");
+    if(!lightRender)
+        return;
+    lightRender->getShaderProgram()->bind();
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+    lightRender->getShaderProgram()->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
+    lightRender->getShaderProgram()->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
+    lightRender->getShaderProgram()->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
+    lightRender->getShaderProgram()->setUniformValue("lightColor",QVector3D(1.0f,0.5f,0.31f));
+    lightRender->getShaderProgram()->setUniformValue("objectColor",QVector3D(1.0f,1.0f,0.0f));
+    lightRender->getShaderProgram()->setUniformValue("lightPos",QVector3D(2.0f,2.0f,2.0f));
+    lightRender->getShaderProgram()->setUniformValue("viewPos",QVector3D(global_camera.Position.x,global_camera.Position.y,global_camera.Position.z));
+    lightRender->draw();
+
+
     //skybox
-    glDepthFunc(GL_LEQUAL);
-    skyboxShader->bind();
-    glm::mat4 sky_view = glm::mat4(glm::mat3(global_camera.GetViewMatrix()));
-    skyboxShader->setUniformValue("view",QMatrix4x4(glm::value_ptr(sky_view)).transposed());
-    skyboxShader->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
-    glBindVertexArray(skyboxVAO);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_CUBE_MAP,cubemapTexture);
-    glDrawArrays(GL_TRIANGLES,0,36);
-    glBindVertexArray(0);
-    glDepthFunc(GL_LESS);
+//    glDepthFunc(GL_LEQUAL);
+//    skyboxShader->bind();
+//    glm::mat4 sky_view = glm::mat4(glm::mat3(global_camera.GetViewMatrix()));
+//    skyboxShader->setUniformValue("view",QMatrix4x4(glm::value_ptr(sky_view)).transposed());
+//    skyboxShader->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
+//    glBindVertexArray(skyboxVAO);
+//    glActiveTexture(GL_TEXTURE0);
+//    glBindTexture(GL_TEXTURE_CUBE_MAP,cubemapTexture);
+//    glDrawArrays(GL_TRIANGLES,0,36);
+//    glBindVertexArray(0);
+//    glDepthFunc(GL_LESS);
 
     //off-screen framebuffer render
     glBindFramebuffer(GL_FRAMEBUFFER,0);
