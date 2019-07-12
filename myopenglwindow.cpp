@@ -32,7 +32,7 @@ Model global_Model;
 MyCamera global_camera(glm::vec3(1.0f, 1.6f,  6.3f));
 
 //glm::vec3 lightPos(-3.0f,5.0f, -5.0f);
-glm::vec3 lightPos(2.0f,2.0f,2.0f);
+glm::vec3 lightPos(2.0f,2.3f,2.0f);
 QVector3D lightColor(1.0f,1.0f,1.0f);
 
 glm::vec3 cubePositions[] = {
@@ -208,7 +208,6 @@ MyShaderProgram* skyboxShader = nullptr;
 MyShaderProgram* environmentMapShader = nullptr;
 GLuint normalCubeVAO,normalCubeVBO;
 
-
 MyShaderProgram* normal_virtualization_shader = nullptr;
 
 MyShaderProgram* model_shader = nullptr;
@@ -218,6 +217,8 @@ GLuint color_quad_VAO,color_quad_VBO,instanceVBO;
 glm::vec2 translations[100];
 int index= 0;
 float offset = 0.1f;
+
+GLuint diffuseTex,specularTex,specularTex_color,emissionTex;
 
 void MyWindowRenderer::renderInit()
 {
@@ -286,6 +287,25 @@ void MyWindowRenderer::renderInit()
     materialRender->setVertexInfo(VertexType::vertex_normal,3);
     materialRender->vertexDataParse(sizeof(cubeVertices_normal),cubeVertices_normal,6);
     m_renderersMap.insert("materialRender",materialRender);
+
+    ShaderRenderer* lightingMapRender = new ShaderRenderer();
+    lightingMapRender->setShaderProgram(":/shaders/lighting_maps/lighting_maps.fg",
+                                        ":/shaders/lighting_maps/lighting_maps.vt");
+    lightingMapRender->setVertexInfo(VertexType::vertex_position,3);
+    lightingMapRender->setVertexInfo(VertexType::vertex_normal,3);
+    lightingMapRender->setVertexInfo(VertexType::vertex_texcoords,2);
+    lightingMapRender->vertexDataParse(sizeof(vertices),vertices,8);
+    genTexture(diffuseTex,":/image/container2.png");
+    genTexture(specularTex,":/image/container2_specular.png");
+    genTexture(specularTex_color,":/image/lighting_maps_specular_color.png");
+    genTexture(emissionTex,":/image/matrix.jpg");
+
+    lightingMapRender->getShaderProgram()->bind();
+    lightingMapRender->getShaderProgram()->setUniformValue("material.diffuse",0);
+    lightingMapRender->getShaderProgram()->setUniformValue("material.specular",1);
+    lightingMapRender->getShaderProgram()->setUniformValue("material.emission",2);
+    m_renderersMap.insert("lightingMapRender",lightingMapRender);
+
 
     //cubeVAO
     glGenVertexArrays(1,&cubeVAO);
@@ -397,6 +417,7 @@ void MyWindowRenderer::renderInit()
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,textureColorbuffer,0);
+    glBindTexture(GL_TEXTURE_2D,0);
     //create a renderbuffer object for depth and stencil attachment
 
     glGenRenderbuffers(1,&rbo);
@@ -412,12 +433,13 @@ void MyWindowRenderer::renderInit()
 
 void MyWindowRenderer::paint()
 {
-    lightPos.x = float(2.0*sin(timeClock.elapsed()*0.001));
-    lightPos.z = float(2.0*cos(timeClock.elapsed()*0.001));
+    lightPos.x = float(4.0*sin(timeClock.elapsed()*0.001));
+    lightPos.z = float(4.0*cos(timeClock.elapsed()*0.001));
+
+
     float t1 = (sin(timeClock.elapsed()*0.001)*0.4+0.6f);
     float t2 = (sin(timeClock.elapsed()*0.003)*0.4+0.6f);
     float t3 = (sin(timeClock.elapsed()*0.006)*0.4+0.6f);
-
     lightColor.setX(t1);
     lightColor.setY(t2);
     lightColor.setZ(t3);
@@ -602,6 +624,27 @@ void MyWindowRenderer::paint()
     materialRender->getShaderProgram()->setUniformValue("lightProperty.ambientLight",QVector3D(lightColor)*0.2);
     global_Model.Draw(materialRender->getShaderProgram());
 
+    ShaderRenderer* lightingMapRender = getRenderer("lightingMapRender");
+    lightingMapRender->getShaderProgram()->bind();
+    model = glm::mat4(1.0);
+    model = glm::translate(model,glm::vec3(0.5f,0.0f,2.0f));
+    lightingMapRender->getShaderProgram()->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
+    lightingMapRender->getShaderProgram()->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
+    lightingMapRender->getShaderProgram()->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
+    lightingMapRender->getShaderProgram()->setUniformValue("material.shininess",32.0f);
+    lightingMapRender->getShaderProgram()->setUniformValue("lightProperty.ambientLight",QVector3D(0.2f,0.2f,0.2f));
+    lightingMapRender->getShaderProgram()->setUniformValue("lightProperty.diffuseLight",QVector3D(0.5f,0.5f,0.5f));
+    lightingMapRender->getShaderProgram()->setUniformValue("lightProperty.specularLight",QVector3D(1.0f,1.0f,1.0f));
+    lightingMapRender->getShaderProgram()->setUniformValue("lightProperty.lightPos",QVector3D(lightPos.x,lightPos.y,lightPos.z));
+    lightingMapRender->getShaderProgram()->setUniformValue("viewPos",QVector3D(global_camera.Position.x,global_camera.Position.y,global_camera.Position.z));
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D,diffuseTex);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D,specularTex_color);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D,emissionTex);
+    lightingMapRender->draw();
+
     //skybox
 //    glDepthFunc(GL_LEQUAL);
 //    skyboxShader->bind();
@@ -621,6 +664,7 @@ void MyWindowRenderer::paint()
     glClear(GL_COLOR_BUFFER_BIT);
     framebufferShader->bind();
     glBindVertexArray(quadVAO);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D,textureColorbuffer);
     glDrawArrays(GL_TRIANGLES,0,6);
 }
