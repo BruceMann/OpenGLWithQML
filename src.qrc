@@ -37,5 +37,11 @@
         <file>shaders/materials/materials.vt</file>
         <file>shaders/lighting_maps/lighting_maps.fg</file>
         <file>shaders/lighting_maps/lighting_maps.vt</file>
+        <file>shaders/light_caster/directional_light.fg</file>
+        <file>shaders/light_caster/directional_light.vt</file>
+        <file>shaders/light_caster/point_light.fg</file>
+        <file>shaders/light_caster/point_light.vt</file>
+        <file>shaders/light_caster/spot_light.fg</file>
+        <file>shaders/light_caster/spot_light.vt</file>
     </qresource>
 </RCC>
