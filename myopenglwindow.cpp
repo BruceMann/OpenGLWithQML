@@ -32,7 +32,8 @@ Model global_Model;
 MyCamera global_camera(glm::vec3(1.0f, 1.6f,  6.3f));
 
 //glm::vec3 lightPos(-3.0f,5.0f, -5.0f);
-glm::vec3 lightPos(0.0f,0.0f,0.0f);
+glm::vec3 lightPos(2.0f,2.0f,2.0f);
+QVector3D lightColor(1.0f,1.0f,1.0f);
 
 glm::vec3 cubePositions[] = {
     glm::vec3(-8.8f, -2.0f, -2.3f),
@@ -73,9 +74,9 @@ MyOpenglWindow::MyOpenglWindow()
     updateTimer->start();
 
     global_camera.MovementSpeed=0.04f;
-    global_camera.Pitch = -30.7f;
+    global_camera.Pitch = -10.7f;
     global_camera.Yaw = -50.0f;
-    global_camera.Position = glm::vec3(-1.0f,0.4f,0.5f);
+    global_camera.Position = glm::vec3(-3.5f,2.0f,4.8f);
 
     this->installEventFilter(&global_camera);
 }
@@ -278,6 +279,14 @@ void MyWindowRenderer::renderInit()
     lightRender->vertexDataParse(sizeof(cubeVertices_normal),cubeVertices_normal,6);
     m_renderersMap.insert("lightRender",lightRender);
 
+    ShaderRenderer* materialRender = new ShaderRenderer();
+    materialRender->setShaderProgram(":/shaders/materials/materials.fg",
+                                     ":/shaders/materials/materials.vt");
+    materialRender->setVertexInfo(VertexType::vertex_position,3);
+    materialRender->setVertexInfo(VertexType::vertex_normal,3);
+    materialRender->vertexDataParse(sizeof(cubeVertices_normal),cubeVertices_normal,6);
+    m_renderersMap.insert("materialRender",materialRender);
+
     //cubeVAO
     glGenVertexArrays(1,&cubeVAO);
     glGenBuffers(1,&cubeVBO);
@@ -330,7 +339,7 @@ void MyWindowRenderer::renderInit()
     glBindBuffer(GL_ARRAY_BUFFER,0);
     glBindVertexArray(0);
     //model data load
-//    global_Model.LoadModel("C:/Users/Bruce/Documents/OpenGLWithQML/models/sphere/sphere.obj");
+    global_Model.LoadModel("C:/Users/Bruce/Documents/OpenGLWithQML/models/sphere/sphere.obj");
 //     global_Model.LoadModel("D:/LearnOpenGL-master/resources/objects/rock/rock.obj");
 //    global_Model.LoadModel("D:/LearnOpenGL-master/resources/objects/nanosuit/nanosuit.obj");
 
@@ -403,7 +412,17 @@ void MyWindowRenderer::renderInit()
 
 void MyWindowRenderer::paint()
 {
-    //qDebug()<<"painting"<<QTime::currentTime().msec();
+    lightPos.x = float(2.0*sin(timeClock.elapsed()*0.001));
+    lightPos.z = float(2.0*cos(timeClock.elapsed()*0.001));
+    float t1 = (sin(timeClock.elapsed()*0.001)*0.4+0.6f);
+    float t2 = (sin(timeClock.elapsed()*0.003)*0.4+0.6f);
+    float t3 = (sin(timeClock.elapsed()*0.006)*0.4+0.6f);
+
+    lightColor.setX(t1);
+    lightColor.setY(t2);
+    lightColor.setZ(t3);
+
+
     if(!finishInit){
         qDebug()<<"init error!!!";
         return;
@@ -431,7 +450,6 @@ void MyWindowRenderer::paint()
     singleColorShader->bind();
     singleColorShader->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
     singleColorShader->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
-
 
     //1st pass
     glEnable(GL_STENCIL_TEST);
@@ -513,28 +531,28 @@ void MyWindowRenderer::paint()
     shaderRender->draw();
 
     //cube 2 use environment mapping texture
-    ShaderRenderer* envirCube = getRenderer("envirCubeRender");
-    if(!envirCube)
-        return;
-    envirCube->getShaderProgram()->bind();
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_CUBE_MAP,cubemapTexture);
-    glm::vec3 cameraPos = global_camera.Position;
-    envirCube->getShaderProgram()->setUniformValue("cameraPos",QVector3D(cameraPos.x,cameraPos.y,cameraPos.z));
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 2.0f));
-    envirCube->getShaderProgram()->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
-    envirCube->getShaderProgram()->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
-    envirCube->getShaderProgram()->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
-    envirCube->draw();
+//    ShaderRenderer* envirCube = getRenderer("envirCubeRender");
+//    if(!envirCube)
+//        return;
+//    envirCube->getShaderProgram()->bind();
+//    glActiveTexture(GL_TEXTURE0);
+//    glBindTexture(GL_TEXTURE_CUBE_MAP,cubemapTexture);
+//    glm::vec3 cameraPos = global_camera.Position;
+//    envirCube->getShaderProgram()->setUniformValue("cameraPos",QVector3D(cameraPos.x,cameraPos.y,cameraPos.z));
+//    model = glm::mat4(1.0f);
+//    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 2.0f));
+//    envirCube->getShaderProgram()->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
+//    envirCube->getShaderProgram()->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
+//    envirCube->getShaderProgram()->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
+//    envirCube->draw();
 
+    //the lamp
     ShaderRenderer* colorRender = getRenderer("colorRender");
     if(!colorRender)
         return;
     colorRender->getShaderProgram()->bind();
-
     model = glm::mat4(1.0);
-    model = glm::translate(model,glm::vec3(0.0f,2.0f,0.0f));
+    model = glm::translate(model,lightPos);
     model = glm::scale(model,glm::vec3(0.2f,0.2f,0.2f));
     colorRender->getShaderProgram()->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
     colorRender->getShaderProgram()->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
@@ -542,6 +560,7 @@ void MyWindowRenderer::paint()
     colorRender->getShaderProgram()->setUniformValue("pureWhite",true);
     colorRender->draw();
 
+    //basic lighting cube
     ShaderRenderer* lightRender = getRenderer("lightRender");
     if(!lightRender)
         return;
@@ -553,10 +572,35 @@ void MyWindowRenderer::paint()
     lightRender->getShaderProgram()->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
     lightRender->getShaderProgram()->setUniformValue("lightColor",QVector3D(1.0f,0.5f,0.31f));
     lightRender->getShaderProgram()->setUniformValue("objectColor",QVector3D(1.0f,1.0f,0.0f));
-    lightRender->getShaderProgram()->setUniformValue("lightPos",QVector3D(2.0f,2.0f,2.0f));
+    lightRender->getShaderProgram()->setUniformValue("lightPos",QVector3D(lightPos.x,lightPos.y,lightPos.z));
     lightRender->getShaderProgram()->setUniformValue("viewPos",QVector3D(global_camera.Position.x,global_camera.Position.y,global_camera.Position.z));
     lightRender->draw();
 
+    ShaderRenderer* materialRender = getRenderer("materialRender");
+    materialRender->getShaderProgram()->bind();
+    model = glm::mat4(1.0);
+    model = glm::translate(model,glm::vec3(2.0f,0.0f,2.0f));
+    materialRender->getShaderProgram()->setUniformValue("model", QMatrix4x4(glm::value_ptr(model)).transposed());
+    materialRender->getShaderProgram()->setUniformValue("view",QMatrix4x4(glm::value_ptr(view)).transposed());
+    materialRender->getShaderProgram()->setUniformValue("projection",QMatrix4x4(glm::value_ptr(projection)).transposed());
+    materialRender->getShaderProgram()->setUniformValue("material.ambient",QVector3D(1.0f, 0.5f, 0.31f));
+    materialRender->getShaderProgram()->setUniformValue("material.diffuse",QVector3D(1.0f, 0.5f, 0.31f));
+    materialRender->getShaderProgram()->setUniformValue("material.specular",QVector3D(0.5f, 0.5f, 0.5f));
+    materialRender->getShaderProgram()->setUniformValue("material.shininess",32.0f);
+    materialRender->getShaderProgram()->setUniformValue("lightProperty.ambientLight",QVector3D(0.2f,0.2f,0.2f));
+    materialRender->getShaderProgram()->setUniformValue("lightProperty.diffuseLight",QVector3D(0.5f,0.5f,0.5f));
+    materialRender->getShaderProgram()->setUniformValue("lightProperty.specularLight",QVector3D(1.0f,1.0f,1.0f));
+    materialRender->getShaderProgram()->setUniformValue("lightProperty.lightPos",QVector3D(lightPos.x,lightPos.y,lightPos.z));
+    materialRender->getShaderProgram()->setUniformValue("viewPos",QVector3D(global_camera.Position.x,global_camera.Position.y,global_camera.Position.z));
+    materialRender->draw();
+
+    //sphere
+    model = glm::mat4(1.0);
+    model = glm::translate(model,glm::vec3(-1.5f,0.0f,2.0f));
+    materialRender->getShaderProgram()->setUniformValue("model",QMatrix4x4(glm::value_ptr(model)).transposed());
+    materialRender->getShaderProgram()->setUniformValue("lightProperty.diffuseLight",QVector3D(lightColor)*0.5);
+    materialRender->getShaderProgram()->setUniformValue("lightProperty.ambientLight",QVector3D(lightColor)*0.2);
+    global_Model.Draw(materialRender->getShaderProgram());
 
     //skybox
 //    glDepthFunc(GL_LEQUAL);

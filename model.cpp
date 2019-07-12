@@ -25,7 +25,7 @@ void Model::LoadModel(QString path)
 {
     initializeOpenGLFunctions();
     Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(path.toStdString(),aiProcess_Triangulate|aiProcess_FlipUVs);
+    const aiScene* scene = importer.ReadFile(path.toStdString(),aiProcess_Triangulate|aiProcess_FlipUVs|aiProcess_GenSmoothNormals);
     //check for errors
     if(!scene||scene->mFlags==AI_SCENE_FLAGS_INCOMPLETE||!scene->mRootNode)
     {

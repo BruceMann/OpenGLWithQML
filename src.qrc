@@ -33,5 +33,7 @@
         <file>shaders/lighting/colors.vt</file>
         <file>shaders/lighting/basic_light.fg</file>
         <file>shaders/lighting/basic_light.vt</file>
+        <file>shaders/materials/materials.fg</file>
+        <file>shaders/materials/materials.vt</file>
     </qresource>
 </RCC>

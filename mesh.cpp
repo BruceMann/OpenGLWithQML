@@ -30,7 +30,7 @@ void Mesh::Draw(QOpenGLShaderProgram *shader)
         glBindTexture(GL_TEXTURE_2D,this->textures[i].id);
     }
 
-    //m_shader->setUniformValue("material.shininess",32.0f);
+    m_shader->setUniformValue("material.shininess",32.0f);
 
     //draw mesh
     glBindVertexArray(this->VAO);

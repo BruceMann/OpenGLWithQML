@@ -19,9 +19,9 @@ void main(){
     vec3 lightDir = normalize(lightPos-FragPos);
     float diff = max(dot(lightDir,normal),0.0);
 //specular lighting
-    vec3 viewDir = normalize(FragPos-viewPos);
+    vec3 viewDir = normalize(viewPos-FragPos);
     vec3 reflectDir = reflect(-lightDir,normal);
-    float spec = pow(max(dot(viewDir,reflectDir),0.0),256);
+    float spec = pow(max(dot(viewDir,reflectDir),0.0),128);
     vec3 posColor =normalize(FragPos);
     color = (ambientStrength+diff+spec)*lightColor*objectColor;
     //color = (ambientStrength+diff+spec)*posColor;
